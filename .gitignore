@@ -1,0 +1,5 @@
+**/CMakeFiles/
+**/Makefile
+**/CMakeCache*
+**/cmake*
+environment/hanabi_learning_environment/hanabi_lib
