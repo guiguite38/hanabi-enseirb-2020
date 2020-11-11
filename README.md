@@ -4,6 +4,13 @@
 The aim is to rise to the challenge offered by Deepmind [[1]](#Bard_2020). \
 One promising lead is offered by Facebook [[2]](#lerer2019improving).
 
+## Environment installation
+
+See the instructions in ```environment/README.md```.
+If you run into the error:
+  - ```ModuleNotFoundError: No module named 'skbuild'``` you need to install [scikit-build](https://scikit-build.readthedocs.io/en/latest/installation.html)
+  - ```CMake error```, try running ```environment/clean_all.sh``` then try again
+
 ## Objectives
 
 Our first main goal is to rise to the first challenge, which is when the game happens with the same agent playing with himself.
