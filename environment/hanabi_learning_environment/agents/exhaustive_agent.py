@@ -245,8 +245,11 @@ class ExtensiveAgent(Agent):
         """
         # First version, for testing purposes : the state is not modified, score is calculated by hand solely
         scores = []
+        num_to_letters = ["B", "G", "R", "W", "Y"]
+
         for card in cards:
-            if self.playable_card(card, observation["fireworks"]):
+            tempo_card = {"color": num_to_letters[card["color"]], "rank": card["rank"]}
+            if self.playable_card(tempo_card, observation["fireworks"]):
                 scores.append(
                     self.score_game(observation["fireworks"]) + 1
                 )  # adding a card adds a single point
