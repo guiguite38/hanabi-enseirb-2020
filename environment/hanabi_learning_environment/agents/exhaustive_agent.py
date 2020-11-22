@@ -136,7 +136,7 @@ class ExtensiveAgent(Agent):
          for now no heuristic is used to determine which hand is the most promising for a given score"""
         score = 0
         for coloured_firework in fireworks:
-            score += coloured_firework
+            score += fireworks[coloured_firework]
         return score
 
     def unseen_cards(self, observation):
