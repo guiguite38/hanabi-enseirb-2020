@@ -159,7 +159,6 @@ class ExtensiveAgent(Agent):
         # We will do approched probabilities for a first approach (full probabilities might be a little costly)
         #color_plausible(c) and rank_plausible(r)
         knowledge = observation["pyhanabi"].card_knowledge()[0] # According to the definition, relative to the player
-        nb_deck = observation["pyhanabi"].deck_size() 
         nb_hand = self.config["hand_size"]
         res = [] # The probability that an unseen card is at a particular place in the hand
         possible_cards = [] # The possible cards for each card 
@@ -175,6 +174,7 @@ class ExtensiveAgent(Agent):
 
         for i in range(nb_hand): # Current position
             individual_answer = [] # The probabilities for each possible card in that place
+            print(possible_cards[i])
 
             for card in possible_cards[i]: #  Index of current card in cards
 
@@ -190,9 +190,15 @@ class ExtensiveAgent(Agent):
                 tempo_sum = 1. / float(len(possible_cards[i]))
                 for k in having_card[card]:
                     tempo_sum *=  (len(possible_cards[l]) - 1.) / float(len(possible_cards[l]))
-                    
-                individual_answer.append(tempo_sum / dynamic_sum[card])
-                res += [[ (card, i/ sum(individual_answer))   for i in individual_answer ]] # Normalize on the position
+                individual_answer.append([card, tempo_sum / dynamic_sum[card]])
+            res += [[[i[0], i[1]]  for i in individual_answer]] # Normalize on the position [ [[]]      ]
+            for i in range(len(res)):
+                tempo_sum = 0
+                for j in range(len(res[0])):
+                    #print("\n s ",res[i],"\n s ",res[i][j],"\n s ",res[i][j][1]," e\n")
+                    tempo_sum += res[i][j][1]
+                for j in range(len(res[0])):
+                    res[i][j][1] = res[i][j][1] / float(tempo_sum)
         return res 
                 
 
