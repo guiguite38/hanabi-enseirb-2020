@@ -280,18 +280,20 @@ class ExtensiveAgent(Agent):
 
         likeliness = self.get_card_probabilities(unseen_cards, observation)
         print(likeliness)
-        scores = self.get_card_scores(unseen_cards,observation)
+        scores = self.get_card_scores(unseen_cards, observation)
         print(scores)
         expected_value = []
         for likely_card in likeliness:
-            expected_value.append(sum([likely_card[i] * scores[i] for i in range len(likely_card)])) # !! should we numpy array all this
-        
-        
+            expected_value.append(
+                sum([likely_card[i] * scores[i] for i in range(len(likely_card))])
+            )  # !! should we numpy array all this
 
         # chose between playing a card, giving a clue, and discarding (!! discarding ? comment on fait ça ?) (!! clues are NOT HANDLED YET !)
         # !! for now we just chose a card to play, for testing purposes
-        return {'action_type': 'PLAY', 'card_index': np.argmax(expected_value)}
-
+        return {
+            "action_type": "PLAY",
+            "card_index": expected_value.index(max(expected_value)),
+        }
 
         # !! Example action formats, kept as an example, to be removed once done
         # return {'action_type': 'PLAY', 'card_index': card_index}
