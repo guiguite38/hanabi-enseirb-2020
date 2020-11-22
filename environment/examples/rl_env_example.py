@@ -20,8 +20,11 @@ import getopt
 from hanabi_learning_environment import rl_env
 from hanabi_learning_environment.agents.random_agent import RandomAgent
 from hanabi_learning_environment.agents.simple_agent import SimpleAgent
-
-AGENT_CLASSES = {'SimpleAgent': SimpleAgent, 'RandomAgent': RandomAgent}
+try:
+  from hanabi_learning_environment.agents.exhaustive_agent import ExtensiveAgent
+except:
+  from exhaustive_agent import ExtensiveAgent
+AGENT_CLASSES = {'SimpleAgent': SimpleAgent, 'ExtensiveAgent': ExtensiveAgent}
 
 
 class Runner(object):
@@ -30,7 +33,7 @@ class Runner(object):
   def __init__(self, flags):
     """Initialize runner."""
     self.flags = flags
-    self.agent_config = {'players': flags['players']}
+    self.agent_config = {'players': flags['players'],"colors": 5, "ranks": 5, "hand_size": 5}
     self.environment = rl_env.make('Hanabi-Full', num_players=flags['players'])
     self.agent_class = AGENT_CLASSES[flags['agent_class']]
 
@@ -44,6 +47,9 @@ class Runner(object):
       done = False
       episode_reward = 0
       while not done:
+        #for i in range(len(observations["player_observations"])):
+          #for key in observations["player_observations"][i]:
+            #print(key, type(observations["player_observations"][i][key]),observations["player_observations"][i][key],"  FIN DU PRINT\n") #observations[i][key]
         for agent_id, agent in enumerate(agents):
           observation = observations['player_observations'][agent_id]
           action = agent.act(observation)
@@ -64,7 +70,7 @@ class Runner(object):
     return rewards
 
 if __name__ == "__main__":
-  flags = {'players': 2, 'num_episodes': 1, 'agent_class': 'SimpleAgent'}
+  flags = {'players': 2, 'num_episodes': 1, 'agent_class': 'ExtensiveAgent'}
   options, arguments = getopt.getopt(sys.argv[1:], '',
                                      ['players=',
                                       'num_episodes=',

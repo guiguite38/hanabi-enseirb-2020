@@ -91,6 +91,7 @@ def recDichoSearchCard(card, cards, i, j):
 
 def dichoSearchCard(card, cards):
     if  card["color"] != None and card["rank"] != -1 and cards != []:
+        card["color"] = color_char_to_idx(str(card["color"]))
         i = 0
         j = len(cards)-1
         return recDichoSearchCard(card, cards, i, j)
@@ -102,7 +103,19 @@ class ExtensiveAgent(Agent):
 
     def __init__(self, config, *args, **kwargs):
         """Initialize the agent."""
+        """ Args:
+      config: dict, With parameters for the game. Config takes the following
+        keys and values.
+          - colors: int, Number of colors \in [2,5].
+          - ranks: int, Number of ranks \in [2,5].
+          - players: int, Number of players \in [2,5].
+          - hand_size: int, Hand size \in [4,5].
+          - max_information_tokens: int, Number of information tokens (>=0)
+          - max_life_tokens: int, Number of life tokens (>=0)
+          - seed: int, Random seed.
+          - random_start_player: bool, Random start player."""
         self.config = config
+        print(config)
         # Extract max info tokens or set default to 8.
         self.max_information_tokens = config.get("information_tokens", 8)
 
@@ -125,13 +138,15 @@ class ExtensiveAgent(Agent):
     Returns a list of all unseen cards (deck + hidden player hand)
     """
         res = [{"color":x,"rank":y} for x in range(self.config["colors"]) for y in range(self.config["ranks"])]
-        for card in observations["discard_pile"]:
-            pos = dichoSearchCard(card, cards)
+        
+        for card in observation["discard_pile"]:
+            pos = dichoSearchCard(card, res)
             if pos != -1:
                 del res[pos]
         for i in range(self.config["players"]):
-            for card in observations["observed_hands"][i]: # It must work even for invalid cards !
-                pos = dichoSearchCard(card, cards)
+            for card in observation["observed_hands"][i]: # It must work even for invalid cards !
+                #print(card, "\n")
+                pos = dichoSearchCard(card, res)
                 if pos != -1:
                     del res[pos]
         return res
@@ -152,7 +167,7 @@ class ExtensiveAgent(Agent):
         dynamic_sum = [-1] * len(cards)
         for i in range(nb_hand): # Harvest all the possible cards for each position in hand
             tempo_possible = []
-            for j in len(cards):
+            for j in range(len(cards)):
                 if knowledge[i].color_plausible(cards[j]["color"]) and knowledge[i].rank_plausible(cards[j]["rank"]):
                     tempo_possible.append(j)
                     having_card[j].append(i)
@@ -161,7 +176,7 @@ class ExtensiveAgent(Agent):
         for i in range(nb_hand): # Current position
             individual_answer = [] # The probabilities for each possible card in that place
 
-            for card in possible_cards: #  Index of current card in cards
+            for card in possible_cards[i]: #  Index of current card in cards
 
                 if dynamic_sum[card] == -1:
                     dynamic_sum[card] = 0
@@ -177,7 +192,7 @@ class ExtensiveAgent(Agent):
                     tempo_sum *=  (len(possible_cards[l]) - 1.) / float(len(possible_cards[l]))
                     
                 individual_answer.append(tempo_sum / dynamic_sum[card])
-            res.append(individual_answer / sum(individual_answer)) # Normalize on the position
+                res += [[ (card, i/ sum(individual_answer))   for i in individual_answer ]] # Normalize on the position
         return res 
                 
 
@@ -205,19 +220,22 @@ class ExtensiveAgent(Agent):
 
         # It computes the score of all possible moves
         for legal_move in observation["legal_moves"]:
-            raise NotImplementedError("Not implemented for loop in act function")
+            
 
             # To compute the score of a PLAY / DISCARD action, it tries playing it with all card it could possibly have in its hand
             unseen_cards = self.unseen_cards(observation)
+            print(unseen_cards)
             # Trick : this will basically be the same method for all 5 cards in hand, with modifications on probability but not on score.
             # scores and simulations for each card should therefore only be computed once, and probabilities each time
-            scores = self.get_card_scores(unseen_cards)
+            
             # ponderate scores by probability of occurence (if a red hint has been given, occurence of red card is more likely) to get expected value (fr:Esperance)
             # Chose move with highest expected value
-            hints = observation[
-                ""
-            ]  # !! Add where those hints are in the observation space, I don't recall
+            
+             # !! Add where those hints are in the observation space, I don't recall
             likeliness = self.get_card_probabilities(unseen_cards, observation)
+            print(likeliness)
+            raise NotImplementedError("Not implemented for loop in act function")
+            scores = self.get_card_scores(unseen_cards)
 
         # !! Example action formats, kept as an example, to be removed once done
         # return {'action_type': 'PLAY', 'card_index': card_index}
