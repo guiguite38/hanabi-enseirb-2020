@@ -252,7 +252,7 @@ class ExtensiveAgent(Agent):
             if self.playable_card(tempo_card, observation["fireworks"]):
                 scores.append(
                     self.score_game(observation["fireworks"]) + 1
-                )  # adding a card adds a single point
+                )  # adding a card adds a single point to score wherever it is
             else:
                 scores.append(
                     -1
@@ -288,7 +288,7 @@ class ExtensiveAgent(Agent):
         expected_value = []
         for likely_card in likeliness:
             expected_value.append(
-                sum([likely_card[i] * scores[i] for i in range(len(likely_card))])
+                sum([likely_card[i][1] * scores[i] for i in range(len(likely_card))])
             )  # !! should we numpy array all this
 
         # chose between playing a card, giving a clue, and discarding (!! discarding ? comment on fait ça ?) (!! clues are NOT HANDLED YET !)
