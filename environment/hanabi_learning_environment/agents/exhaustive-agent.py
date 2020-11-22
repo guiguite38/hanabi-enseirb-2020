@@ -124,7 +124,7 @@ class ExtensiveAgent(Agent):
         """
     Returns a list of all unseen cards (deck + hidden player hand)
     """
-        res = [(x,y) for x in self.config["colors"] for y in self.config["ranks"]]
+        res = [{"color":x,"rank":y} for x in self.config["colors"] for y in self.config["ranks"]]
         for card in observations["discard_pile"]:
             pos = dichoSearchCard(card, cards)
             if pos != -1:
