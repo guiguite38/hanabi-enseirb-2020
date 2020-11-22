@@ -1,6 +1,100 @@
 """Extensive search of all possible moves, """
 
+""" memo:                       {'current_player': 0,
+                                  'current_player_offset': 0,
+                                  'deck_size': 40,
+                                  'discard_pile': [],
+                                  'fireworks': {'B': 0,
+                                                'G': 0,
+                                                'R': 0,
+                                                'W': 0,
+                                                'Y': 0},
+                                  'information_tokens': 8,
+                                  'legal_moves': [{'action_type': 'PLAY',
+                                                   'card_index': 0},
+                                                  {'action_type': 'PLAY',
+                                                   'card_index': 1},
+                                                  {'action_type': 'PLAY',
+                                                   'card_index': 2},
+                                                  {'action_type': 'PLAY',
+                                                   'card_index': 3},
+                                                  {'action_type': 'PLAY',
+                                                   'card_index': 4},
+                                                  {'action_type':
+                                                  'REVEAL_COLOR',
+                                                   'color': 'R',
+                                                   'target_offset': 1},
+                                                  {'action_type':
+                                                  'REVEAL_COLOR',
+                                                   'color': 'G',
+                                                   'target_offset': 1},
+                                                  {'action_type':
+                                                  'REVEAL_COLOR',
+                                                   'color': 'B',
+                                                   'target_offset': 1},
+                                                  {'action_type': 'REVEAL_RANK',
+                                                   'rank': 0,
+                                                   'target_offset': 1},
+                                                  {'action_type': 'REVEAL_RANK',
+                                                   'rank': 1,
+                                                   'target_offset': 1},
+                                                  {'action_type': 'REVEAL_RANK',
+                                                   'rank': 2,
+                                                   'target_offset': 1}],
+                                  'life_tokens': 3,
+                                  'observed_hands': [[{'color': None, 'rank':
+                                  -1},
+                                                      {'color': None, 'rank':
+                                                      -1},
+                                                      {'color': None, 'rank':
+                                                      -1},
+                                                      {'color': None, 'rank':
+                                                      -1},
+                                                      {'color': None, 'rank':
+                                                      -1}],
+                                                     [{'color': 'G', 'rank': 2},
+                                                      {'color': 'R', 'rank': 0},
+                                                      {'color': 'R', 'rank': 1},
+                                                      {'color': 'B', 'rank': 0},
+                                                      {'color': 'R', 'rank':
+                                                      1}]],
+                                  'num_players': 2,
+                                  'vectorized': [ 0, 0, 1, ... ]}
+"""
+
 from hanabi_learning_environment.rl_env import Agent
+from hanabi_learning_environment.pyhanabi import color_char_to_idx
+from hanabi_learning_environment.pyhanabi import color_idx_to_char
+from hanabi_learning_environment import pyhanabi
+
+
+def recDichoSearchCard(card, cards, i, j):
+    """ The cards must be in order, first colors, then ranks (like : (0 (c),0 (r)) (0,1) (1,1)  (1,2) ...) """
+    if (j - i) > 0:
+        center = (i+j)//2
+        if (cards[center]["color"] == card["color"] and cards[center]["rank"] == card["rank"]):
+            return center
+        elif (cards[center]["color"] == card["color"]):
+            if (cards[center]["rank"] > card["rank"]):
+                return recDichoSearchCard(card, cards, i, center - 1)
+            else:
+                return recDichoSearchCard(card, cards, center + 1, j)
+        else:
+            if cards[center]["color"] > card["color"]:
+                return recDichoSearchCard(card, cards, i, center - 1)
+            else:
+                return recDichoSearchCard(card, cards, center + 1, j)
+    elif (j - i) == 0: # Useless, when (j - i) == -1, it will return -1 (all elements already checked)
+        if cards[i]["color"] == card["color"] and cards[i]["rank"] == card["rank"]:
+            return i
+    return -1
+
+def dichoSearchCard(card, cards):
+    if  card["color"] != None and card["rank"] != -1 and cards != []:
+        i = 0
+        j = len(cards)-1
+        return recDichoSearchCard(card, cards, i, j)
+    return -1
 
 
 class ExtensiveAgent(Agent):
@@ -30,16 +124,28 @@ class ExtensiveAgent(Agent):
         """
     Returns a list of all unseen cards (deck + hidden player hand)
     """
-        raise NotImplementedError("Not implemented possible_cards function")
+        res = [(x,y) for x in self.config["colors"] for y in self.config["ranks"]]
+        for card in observations["discard_pile"]:
+            pos = dichoSearchCard(card, cards)
+            if pos != -1:
+                del res[pos]
+        for i in range(self.config["players"]):
+            for card in observations["observed_hands"][i]: # It must work even for invalid cards !
+                pos = dichoSearchCard(card, cards)
+                if pos != -1:
+                    del res[pos]
+        return res
 
         # Take all possible cards
-        # remove seen cards from observations
+        # remove seen cards from observations (and discard pile !!!)
         # return remaining cards
 
     def get_card_probabilities(self, cards, observation):
         raise NotImplementedError("Not implemented get_card_probabilities function")
 
         # From number of remaining cards in deck, and hints, guess how likely it is to get each given card
+        # (((There's a class named "HanabiCardKnowledge" and a function that create those, named "card_knowledge" in HanabiObservation class)))
+        # We need 
 
     def get_card_scores(self, cards):
         """
