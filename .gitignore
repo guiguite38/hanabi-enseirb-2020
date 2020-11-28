@@ -3,3 +3,5 @@
 **/CMakeCache*
 **/cmake*
 environment/hanabi_learning_environment/hanabi_lib
+
+**/__pycache__
