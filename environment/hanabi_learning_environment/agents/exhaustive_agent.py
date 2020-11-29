@@ -239,7 +239,7 @@ class ExtensiveAgent(Agent):
         # (((There's a class named "HanabiCardKnowledge" and a function that create those, named "card_knowledge" in HanabiObservation class)))
         # We need
 
-    def get_card_scores(self, cards, observation):
+    def get_card_scores(self, cards, observation, iteration):
         """
         returns a card list, and the score each would get if it was played
         """
@@ -258,10 +258,29 @@ class ExtensiveAgent(Agent):
                     -1
                 )  # playing the wrong card causes the use of a red marker and is therefore punished
         return scores
-        # simulate playing card
-        # from that state we either :
-        # reach the iteration limit, compute a score (heuristically or end-game score)
-        # haven't reached the iteration limit, simulate the other agent's move (begin by using a random_agent,  then use this agent as a model of the oponent, then idk yet...)
+
+    def chose_action(self, expected_value):
+        playable_threshold = 0.75
+        discardable_threshold = 0
+        best_card = expected_value.index(max(expected_value))
+        # we only play if this will give us points with a high probability
+        if(expected_value[best_card] <= playable_threshold):
+            return {'action_type': 'PLAY', 'card_index': }
+
+        worst_card = expected_value.index(min(expected_value))
+        # otherwise we can discard a card if any card is likely to bring a bad score
+        # !! this will need to be the last option once we know how to deal with hints
+        elif(worst_card < discardable_threshold) :
+            return {'action_type': 'DISCARD', 'card_index': worst_card}
+        # otherwise we can give a hint
+        else :
+            # !! The scoring system does not yet give scores for hints. Therefore we chose a colour randomly
+            return {
+                'action_type': 'REVEAL_COLOR',
+                'color': random.choice(["B", "G", "R", "W", "Y"]),
+                'target_offset': 1 # !! in a two player game, the offset can only be one (this will have to be changed with more players)
+            }
+
 
     def act(self, observation):
         """Act based on an observation."""
@@ -275,36 +294,17 @@ class ExtensiveAgent(Agent):
         unseen_cards = self.unseen_cards(observation)
         print(unseen_cards)
 
-        # Trick : this will basically be the same method for all 5 cards in hand, with modifications on probability but not on score.
-        # scores and simulations for each card should therefore only be computed once, and probabilities each time
-
-        # ponderate scores by probability of occurence (if a red hint has been given, occurence of red card is more likely) to get expected value (fr:Esperance)
-        # Chose move with highest expected value
-
         likeliness = self.get_card_probabilities(unseen_cards, observation)
         print(likeliness)
         scores = self.get_card_scores(unseen_cards, observation)
         print(scores)
+        # Chose move with highest expected value (probability of occurence * score)
         expected_value = []
         for likely_card in likeliness:
             expected_value.append(
                 sum([likely_card[i][1] * scores[i] for i in range(len(likely_card))])
-            )  # !! should we numpy array all this
+            )  # !! should we numpy array all this ?
 
-        # chose between playing a card, giving a clue, and discarding (!! discarding ? comment on fait ça ?) (!! clues are NOT HANDLED YET !)
-        # !! for now we just chose a card to play, for testing purposes
-        return {
-            "action_type": "PLAY",
-            "card_index": expected_value.index(max(expected_value)),
-        }
+        return chose_action(expected_value)
 
-        # !! Example action formats, kept as an example, to be removed once done
-        # return {'action_type': 'PLAY', 'card_index': card_index}
-        # return {
-        #     'action_type': 'REVEAL_COLOR',
-        #     'color': card['color'],
-        #     'target_offset': player_offset
-        # }
-        # return {'action_type': 'DISCARD', 'card_index': 0}
-        # return {'action_type': 'PLAY', 'card_index': 0}
 
