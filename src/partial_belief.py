@@ -289,6 +289,8 @@ class PartialBelief:
                     # print(f"P(rank={r}, color={c}, offset={offset})={p:.4f} possible ranks:", self.possible_ranks[offset], "possible colors:", self.possible_colors[offset])
                     assert p > 0
                     info += -np.log(p)
+                else:
+                    info += - np.log(1 - self.probability(offset, rank=rank))
             # print("Info of rank:", rank, f"info={info:.3f}")
             if info > best_info:
                 best_info = info
@@ -303,6 +305,8 @@ class PartialBelief:
                     # print(f"P(rank={r}, color={c}, offset={offset})={p:.4f} possible ranks:", self.possible_ranks[offset], "possible colors:", self.possible_colors[offset])
                     assert p > 0
                     info += -np.log(p)
+                else:
+                    info += - np.log(1 - self.probability(offset, color=color))
             # print("Info of color:", color, f"info={info:.3f}")
             if info > best_info:
                 best_info = info
