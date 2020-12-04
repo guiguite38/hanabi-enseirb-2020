@@ -158,14 +158,16 @@ class PartialBelief:
         # Must be done last
         self._update_hints(observation)
 
+        assert np.sum(self.virtual_ranks) <= self.hand_size
+        assert np.sum(self.virtual_colors) <= self.hand_size
         assert len(np.where(self.deck < 0)[0]) == 0, "[Counting error] a card was removed one time too many !"
 
     def _filtered_deck(self, offset: int) -> np.ndarray:
         cards = self.deck.copy()
-        for r in range(5):
-            cards[:, r] *= self.possible_ranks[offset]
         for c in range(5):
-            cards[c, :] *= self.possible_colors[offset]
+            cards[c, :] *= self.possible_colors[offset, c]
+        for r in range(5):
+            cards[:, r] *= self.possible_ranks[offset, r]
         return cards
 
     def _total_cards(self, offset: int, color=False, rank=False) -> int:
@@ -179,23 +181,25 @@ class PartialBelief:
 
         cards = np.sum(cards)
         if rank:
+            print("bef:", cards)
             cards -= np.sum(self.virtual_ranks * self.possible_ranks[offset])
+            print("aft:", cards)
         if color:
             cards -= np.sum(self.virtual_colors * self.possible_colors[offset])
         return cards
 
     def _prob_color(self, color: int, offset: int) -> float:
-        total_cards = self._total_cards(offset, color=True)
+        total_cards = self._total_cards(offset, color=False)
         if total_cards == 0:
             return 0
-        total_colors = np.sum(self._filtered_deck(offset)[color, :]) - self.virtual_colors[color]
+        total_colors = np.sum(self._filtered_deck(offset)[color, :])  # - self.virtual_colors[color]
         return total_colors / total_cards
 
     def _prob_rank(self, rank: int,  offset: int) -> float:
-        total_cards = self._total_cards(offset, rank=True)
+        total_cards = self._total_cards(offset, rank=False)
         if total_cards == 0:
             return 0
-        total_colors = np.sum(self._filtered_deck(offset)[:, rank]) - self.virtual_ranks[rank]
+        total_colors = np.sum(self._filtered_deck(offset)[:, rank])  # - self.virtual_ranks[rank]
         return total_colors / total_cards
 
     def _prob_card(self, rank: int, color: int, offset: int) -> float:
@@ -267,6 +271,15 @@ class PartialBelief:
                 probs[_COLOR_TO_INDEX[color]] = self.probability(offset, n, color)
         return np.sum(probs)
 
+    def probability_useless(self, offset: int, fireworks: Dict) -> float:
+        p = 0
+        for color, n in fireworks.items():
+            if n == 5:
+                p += self._prob_color(_COLOR_TO_INDEX[color], offset)
+            for i in range(n):
+                p += self.probability(offset, i, color)
+        return p
+
     def most_informative_hint(self, actual_hand: List[Dict]) -> Tuple[Dict, float]:
         ranks = []
         colors = []
@@ -290,7 +303,9 @@ class PartialBelief:
                     assert p > 0
                     info += -np.log(p)
                 else:
-                    info += - np.log(1 - self.probability(offset, rank=rank))
+                    p = self._prob_rank(rank, offset)
+                    assert p < 1
+                    info += -np.log(1 - p)
             # print("Info of rank:", rank, f"info={info:.3f}")
             if info > best_info:
                 best_info = info
@@ -306,7 +321,9 @@ class PartialBelief:
                     assert p > 0
                     info += -np.log(p)
                 else:
-                    info += - np.log(1 - self.probability(offset, color=color))
+                    p = self._prob_color(_COLOR_TO_INDEX[color], offset)
+                    assert p < 1
+                    info += -np.log(1 - p)
             # print("Info of color:", color, f"info={info:.3f}")
             if info > best_info:
                 best_info = info
