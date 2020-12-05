@@ -102,9 +102,15 @@ class HanabiHand {
     return card_knowledge_;
   }
   void AddCard(HanabiCard card, const CardKnowledge& initial_knowledge);
+  //MB: Insert card at specific position
+  void InsertCard(HanabiCard card, int card_index);
   // Remove card_index card from hand. Put in discard_pile if not nullptr
   // (pushes the card to the back of the discard_pile vector).
   void RemoveFromHand(int card_index, std::vector<HanabiCard>* discard_pile);
+  // MB: Remove card_index card from hand and put back in deck. Deck might not be able to access like this.
+  void ReturnFromHand(int card_index);
+  // Remove knowledge seperately
+  void RemoveKnowledge(int card_index, const CardKnowledge& initial_knowledge);
   // Make cards with the given rank visible.
   // Returns new information bitmask, bit_i set if card_i color was revealed
   // and was previously unknown.

@@ -76,6 +76,7 @@ int HanabiGame::GetMoveUid(HanabiMove move) const {
                     move.Color(), move.Rank());
 }
 
+//MB: RETURN and DEAL_SPECIFIC aren't here. Problem?
 int HanabiGame::GetMoveUid(HanabiMove::Type move_type, int card_index,
                            int target_offset, int color, int rank) const {
   switch (move_type) {

@@ -20,18 +20,21 @@
 
 namespace hanabi_learning_env {
 
-// 5 types of moves:
+// 7 types of moves:
 // "Play" card_index    of card in player hand
 // "Discard" card_index    of card in player hand
+// "Return" card_index of card in player hand
 // "RevealColor" target_offset color    hints to player all cards of color
 // "RevealRank" target_offset rank    hints to player all cards of given rank
 // NOTE: RevealXYZ target_offset field is an offset from the acting player
 // "Deal" color rank    deal card with color and rank
+// "DealSpecifc" color rank deal specific card with colour and rank and stay on player
 // "Invalid"   move is not valid
+
 class HanabiMove {
   // HanabiMove is small, and intended to be passed by value.
  public:
-  enum Type { kInvalid, kPlay, kDiscard, kRevealColor, kRevealRank, kDeal };
+  enum Type { kInvalid, kPlay, kDiscard, kRevealColor, kRevealRank, kDeal, kReturn, kDealSpecific};
 
   HanabiMove(Type move_type, int8_t card_index, int8_t target_offset,
              int8_t color, int8_t rank)

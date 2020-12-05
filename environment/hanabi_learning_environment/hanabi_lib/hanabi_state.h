@@ -35,6 +35,7 @@ class HanabiState {
    public:
     explicit HanabiDeck(const HanabiGame& game);
     // DealCard returns invalid card on failure.
+    void ReturnCard(int color, int rank);
     HanabiCard DealCard(int color, int rank);
     HanabiCard DealCard(std::mt19937* rng);
     int Size() const { return total_count_; }
@@ -84,6 +85,7 @@ class HanabiState {
   bool ChanceOutcomeIsLegal(HanabiMove move) const { return MoveIsLegal(move); }
   double ChanceOutcomeProb(HanabiMove move) const;
   void ApplyChanceOutcome(HanabiMove move) { ApplyMove(move); }
+  void RemoveKnowledge(int player, int card_index);
   void ApplyRandomChance();
   // Get the valid chance moves, and associated probabilities.
   // Guaranteed that moves.size() == probabilities.size().
@@ -97,6 +99,8 @@ class HanabiState {
   int CurPlayer() const { return cur_player_; }
   int LifeTokens() const { return life_tokens_; }
   int InformationTokens() const { return information_tokens_; }
+  int TurnsToPlay() const {return turns_to_play_; }
+
   const std::vector<HanabiHand>& Hands() const { return hands_; }
   const std::vector<int>& Fireworks() const { return fireworks_; }
   const HanabiGame* ParentGame() const { return parent_game_; }
@@ -121,7 +125,7 @@ class HanabiState {
   HanabiHand* HandByOffset(int offset) {
     return &hands_[(cur_player_ + offset) % hands_.size()];
   }
-  void AdvanceToNextPlayer();  // Set cur_player to next player to act.
+  void AdvanceToNextPlayer(bool stayOnPlayer);  // Set cur_player to next player to act.
   bool HintingIsLegal(HanabiMove move) const;
   int PlayerToDeal() const;  // -1 if no player needs a card.
   bool IncrementInformationTokens();

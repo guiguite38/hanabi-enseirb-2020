@@ -90,9 +90,11 @@ int TargetOffset(pyhanabi_move_t* move);
 int MoveColor(pyhanabi_move_t* move);
 int MoveRank(pyhanabi_move_t* move);
 bool GetDiscardMove(int card_index, pyhanabi_move_t* move);
+bool GetReturnMove(int card_index, int player, pyhanabi_move_t* move);
 bool GetPlayMove(int card_index, pyhanabi_move_t* move);
 bool GetRevealColorMove(int target_offset, int color, pyhanabi_move_t* move);
 bool GetRevealRankMove(int target_offset, int rank, pyhanabi_move_t* move);
+bool GetDealSpecificMove(int card_index, int player, int color, int rank,pyhanabi_move_t* move);
 
 /* HistoryItem functions. */
 void DeleteHistoryItem(pyhanabi_history_item_t* item);
@@ -113,8 +115,9 @@ void CopyState(const pyhanabi_state_t* src, pyhanabi_state_t* dest);
 void DeleteState(pyhanabi_state_t* state);
 const void* StateParentGame(pyhanabi_state_t* state);
 void StateApplyMove(pyhanabi_state_t* state, pyhanabi_move_t* move);
+void StateRemoveKnowledge(pyhanabi_state_t* state, int pid, int index);
 int StateCurPlayer(pyhanabi_state_t* state);
-void StateDealRandomCard(pyhanabi_state_t* state);
+void StateDealCard(pyhanabi_state_t* state);
 int StateDeckSize(pyhanabi_state_t* state);
 int StateFireworks(pyhanabi_state_t* state, int color);
 int StateDiscardPileSize(pyhanabi_state_t* state);
@@ -128,6 +131,7 @@ void* StateLegalMoves(pyhanabi_state_t* state);
 int StateLifeTokens(pyhanabi_state_t* state);
 int StateNumPlayers(pyhanabi_state_t* state);
 int StateScore(pyhanabi_state_t* state);
+int StateTurnsToPlay(pyhanabi_state_t* state);
 char* StateToString(pyhanabi_state_t* state);
 bool MoveIsLegal(const pyhanabi_state_t* state, const pyhanabi_move_t* move);
 bool CardPlayableOnFireworks(const pyhanabi_state_t* state, int color,
