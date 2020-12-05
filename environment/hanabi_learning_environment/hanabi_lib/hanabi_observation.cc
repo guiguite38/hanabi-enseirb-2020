@@ -42,6 +42,15 @@ void ChangeHistoryItemToObserverRelative(int observer_pid, int num_players,
       // Hide cards dealt to observer if they shouldn't be able to see them.
       item->move = HanabiMove(HanabiMove::kDeal, -1, -1, -1, -1);
     }
+  // MB: DealSpecific are treated differently
+  } else if (item->move.MoveType() == HanabiMove::kDealSpecific) {
+    assert(item->player < 0 && item->deal_to_player >= 0);
+    item->deal_to_player =
+        (item->deal_to_player - observer_pid + num_players) % num_players;
+    if (item->deal_to_player == 0 && !show_cards) {
+      // Hide cards dealt to observer if they shouldn't be able to see them.
+      item->move = HanabiMove(HanabiMove::kDealSpecific, -1, -1, -1, -1);
+    }
   } else {
     assert(item->player >= 0);
     item->player = (item->player - observer_pid + num_players) % num_players;

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "hanabi_hand.h"
-
+#include <iostream>
 #include <algorithm>
 #include <cassert>
 
@@ -48,11 +48,16 @@ std::string HanabiHand::CardKnowledge::ToString() const {
   std::string result;
   result = result + (ColorHinted() ? ColorIndexToChar(Color()) : 'X') +
            (RankHinted() ? RankIndexToChar(Rank()) : 'X') + '|';
+  //MB: if it goes over there is a memory leak
+  assert(color_.Range() <= 8);
+
   for (int c = 0; c < color_.Range(); ++c) {
+
     if (color_.IsPlausible(c)) {
       result += ColorIndexToChar(c);
     }
   }
+
   for (int r = 0; r < rank_.Range(); ++r) {
     if (rank_.IsPlausible(r)) {
       result += RankIndexToChar(r);
@@ -91,6 +96,29 @@ void HanabiHand::RemoveFromHand(int card_index,
   }
   cards_.erase(cards_.begin() + card_index);
   card_knowledge_.erase(card_knowledge_.begin() + card_index);
+}
+
+void HanabiHand::InsertCard(HanabiCard card,int card_index) {
+  // MB: No reset of card knowledge and insertion of card into hand
+  //MB: The choise of Insert
+  REQUIRE(card.IsValid());
+  cards_.insert(cards_.begin()+card_index,card);
+}
+
+void HanabiHand::ReturnFromHand(int card_index) {
+  // MB: Delete from hand (and try to not delete card knowledge too)
+  // MB: Adding to deck is handled by ApplyMove in hanabi_state
+  // MB: cards_ is vector<HanabiCard> , card_knowledge_ is vector<HanabiKnowledge>
+  cards_.erase(cards_.begin() + card_index);
+}
+
+void HanabiHand::RemoveKnowledge(int card_index, const CardKnowledge& initial_knowledge) {
+    // Stand alone: Remove card knowledge only
+    // (use case: eg. used ReturnCard because we thought we wanted to retain knowledge.
+    // but we now realise we want to remove it instead
+    card_knowledge_.erase(card_knowledge_.begin() + card_index);
+    // Similar to cards, we insert the default knowledge in
+    card_knowledge_.insert(card_knowledge_.begin()+card_index,initial_knowledge);
 }
 
 uint8_t HanabiHand::RevealColor(const int color) {
