@@ -4,4 +4,7 @@
 **/cmake*
 environment/hanabi_learning_environment/hanabi_lib
 
+*.so
+*.a
+*egg-info*
 **/__pycache__
