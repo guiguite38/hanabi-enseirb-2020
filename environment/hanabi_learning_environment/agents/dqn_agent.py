@@ -66,7 +66,7 @@ class DQNAgent(Agent):
         self.TARGET_UPDATE = 10
         # initialise DQN
         self.n_actions = len(
-            2 * config["handsize"] + 2 * config["players"] * config["handsize"]
+            2 * config["hand_size"] + 2 * config["players"] * config["hand_size"]
         )  #!! handcoded... should depend on config or smth
 
         self.policy_net = DQN(
