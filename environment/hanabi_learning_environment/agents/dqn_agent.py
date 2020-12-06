@@ -65,7 +65,7 @@ class DQNAgent(Agent):
         self.EPS_DECAY = 200
         self.TARGET_UPDATE = 10
         # initialise DQN
-        self.n_actions = len(
+        self.n_actions = (
             2 * config["hand_size"] + 2 * config["players"] * config["hand_size"]
         )  #!! handcoded... should depend on config or smth
 
