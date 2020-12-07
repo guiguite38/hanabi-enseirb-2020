@@ -253,9 +253,7 @@ int EncodeLastAction(const HanabiGame& game, const HanabiObservation& obs,
     (*encoding)[offset + last_move->player] = 1;
     offset += num_players;
 
-    // MB: Need to add the other move types in here
-    assert(last_move_type != HanabiMove::Type::kDealSpecific);
-    assert(last_move_type != HanabiMove::Type::kReturn);
+    // move type
     switch (last_move_type) {
       case HanabiMove::Type::kPlay:
         (*encoding)[offset] = 1;
@@ -434,7 +432,6 @@ std::vector<int> CanonicalObservationEncoder::Shape() const {
 
 std::vector<int> CanonicalObservationEncoder::Encode(
     const HanabiObservation& obs) const {
-  assert(parent_game_ != nullptr);
   // Make an empty bit string of the proper size.
   std::vector<int> encoding(FlatLength(Shape()), 0);
 
@@ -442,13 +439,9 @@ std::vector<int> CanonicalObservationEncoder::Encode(
   // It is incremented at the end of each section.
   int offset = 0;
   offset += EncodeHands(*parent_game_, obs, offset, &encoding);
-  //std::cout << "Encoded Hands";
   offset += EncodeBoard(*parent_game_, obs, offset, &encoding);
-  //std::cout << "Encoded Board";
   offset += EncodeDiscards(*parent_game_, obs, offset, &encoding);
-  //std::cout << "Encoded Discard";
   offset += EncodeLastAction(*parent_game_, obs, offset, &encoding);
-  // std::cout << "Encoded Last Action";
   if (parent_game_->ObservationType() != HanabiGame::kMinimal) {
     offset += EncodeCardKnowledge(*parent_game_, obs, offset, &encoding);
   }

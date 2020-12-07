@@ -18,7 +18,6 @@ import re
 import cffi
 import enum
 import sys
-import random
 
 DEFAULT_CDEF_PREFIXES = (None, ".", os.path.dirname(__file__), "/include")
 DEFAULT_LIB_PREFIXES = (None, ".", os.path.dirname(__file__), "/lib")
@@ -295,6 +294,7 @@ class HanabiMoveType(enum.IntEnum):
   RETURN = 6
   DEAL_SPECIFIC = 7
 
+
 class HanabiMove(object):
   """Description of an agent move or chance event.
 
@@ -329,27 +329,27 @@ class HanabiMove(object):
     return lib.MoveRank(self._move)
 
   @staticmethod
-  def get_discard_move(card_index):
-    c_move = ffi.new("pyhanabi_move_t*")
-    assert lib.GetDiscardMove(card_index, c_move)
-    return HanabiMove(c_move)
-
-  @staticmethod
-  def get_return_move(card_index, player):
-    c_move = ffi.new("pyhanabi_move_t*")
-    assert lib.GetReturnMove(card_index, player, c_move)
-    return HanabiMove(c_move)
-
-  @staticmethod
   def get_deal_specific_move(card_index, player, color, rank):
     c_move = ffi.new("pyhanabi_move_t*")
     assert lib.GetDealSpecificMove(card_index, player, color, rank, c_move)
     return HanabiMove(c_move)
 
   @staticmethod
+  def get_discard_move(card_index):
+    c_move = ffi.new("pyhanabi_move_t*")
+    assert lib.GetDiscardMove(card_index, c_move)
+    return HanabiMove(c_move)
+
+  @staticmethod
   def get_play_move(card_index):
     c_move = ffi.new("pyhanabi_move_t*")
     assert lib.GetPlayMove(card_index, c_move)
+    return HanabiMove(c_move)
+
+  @staticmethod
+  def get_return_move(card_index, player):
+    c_move = ffi.new("pyhanabi_move_t*")
+    assert lib.GetReturnMove(card_index, player, c_move)
     return HanabiMove(c_move)
 
   @staticmethod
@@ -365,33 +365,6 @@ class HanabiMove(object):
     c_move = ffi.new("pyhanabi_move_t*")
     assert lib.GetRevealRankMove(target_offset, rank, c_move)
     return HanabiMove(c_move)
-
-  def __hash__(self):
-    # Hash a move by concatenating all identifiers
-    return hash(self.__str__())
-
-  def __eq__(self, other):
-    # MB: Overide the move check for equality. Depends on move type
-    if self.type() != other.type():
-      return False
-    # MB: Define what move equality means, depending on MoveType
-    if self.type() == HanabiMoveType.PLAY:
-      return self.card_index() == other.card_index()
-    elif self.type() == HanabiMoveType.DISCARD:
-      return self.card_index() == other.card_index()
-    elif self.type() == HanabiMoveType.RETURN:
-      return self.card_index() == other.card_index()
-    elif self.type() == HanabiMoveType.REVEAL_COLOR:
-      return self.target_offset() == other.target_offset() and self.color() == other.color()
-    elif self.type() == HanabiMoveType.REVEAL_RANK:
-      return self.target_offset() == other.target_offset() and self.rank() == other.rank()
-    elif self.type() == HanabiMoveType.DEAL:
-      return self.color() == other.color() and self.rank() == other.rank()
-    elif self.type() == HanabiMoveType.DEAL_SPECIFIC:
-      return self.color() == other.color() and self.rank() == other.rank()
-    else:
-      print(f"MB: pyhanabi.HanabiMove.__eq__ : failed to recognise move type: {self.type()} {other.type()}")
-      return False
 
   def __str__(self):
     c_string = lib.MoveToString(self._move)
@@ -565,9 +538,6 @@ class HanabiState(object):
       self._game = lib.StateParentGame(c_state)
       lib.CopyState(c_state, self._state)
 
-    # MB: WARNING: Need a way of better Deck copying
-    # _game and game on a State copy don't seem to work properly
-
   def copy(self):
     """Returns a copy of the state."""
     return HanabiState(None, self._state)
@@ -579,9 +549,6 @@ class HanabiState(object):
   def apply_move(self, move):
     """Advance the environment state by making move for acting player."""
     lib.StateApplyMove(self._state, move.c_move)
-
-  def turns_to_play(self):
-    return lib.StateTurnsToPlay(self._state)
 
   def cur_player(self):
     """Returns index of next player to act.
@@ -611,43 +578,42 @@ class HanabiState(object):
     played, this function returns [1, 0, 0, 0, 0].
     """
     firework_list = []
-    # MB Hack: This line originally: lib.NumColors(self._game), but broke copying HanabiState.
-    # MB: Replaced by hard-coded
-    num_colors = 5
-    # print(f"pyhanabi.HanabiState.fireworks: lib.NumColors is {num_colors}")
+    num_colors = lib.NumColors(self._game)
     for c in range(num_colors):
       firework_list.append(lib.StateFireworks(self._state, c))
     return firework_list
 
-  def progress(self):
-    """MB: Utility function. Return the combined fireworks score"""
-    score=0
-    fireworks = self.fireworks()
-    for f in fireworks:
-      score += f
-    return score
-
-  def score(self):
-    """MB: Utility function. Return the strict score"""
-    if self.life_tokens() == 0:
-      return 0
-    else:
-      return self.progress()
-
   def deal_random_card(self):
     """If cur_player == CHANCE_PLAYER_ID, make a random card-deal move."""
-    lib.StateDealCard(self._state)
+    lib.StateDealRandomCard(self._state)
 
-  def deal_specific_card(self, color, rank, card_index):
-    """MB: if cur_player = CHANCE_PLAYER_ID, make a specific card-deal move"""
-    # Note: This move currently changes card knowledge. In the actual one, we don't want to change knowledge
+  def deal_specific_card(self, player_id, color, rank, card_index):
+    """If cur_player == CHANCE_PLAYER_ID, make a specific card-deal move."""
     assert self.cur_player() == CHANCE_PLAYER_ID
-    move = HanabiMove.get_deal_specific_move(color, rank, card_index)
+    move = HanabiMove.get_deal_specific_move(card_index, player_id, color, rank)
     self.apply_move(move)
 
-  def remove_knowledge(self, player, card_index):
-    """Need ability to independently remove card_knowledge"""
-    lib.StateRemoveKnowledge(self._state, player, card_index)
+  def return_card(self, player_id, card_index):
+    """Return the specific card from the hand of the specified player to the
+     deck, but does not remove knowledge."""
+    hand_size = lib.StateGetHandSize(self._state, player_id)
+    assert card_index < hand_size
+    move = HanabiMove.get_return_move(card_index=card_index, player=player_id)
+    self.apply_move(move)
+
+  def set_hand(self, player_id, hand):
+    """Set the hand of the specified player to the specified hand given in the
+    same manner as in the observations vector.
+
+    hand arg is a list of dict with keys 'color' with string value and 'rank'
+    with int value."""
+    hand_size = lib.StateGetHandSize(self._state, player_id)
+    for _ in range(hand_size):
+        self.return_card(player_id, 0)
+    for card_index, card in enumerate(hand):
+        color = color_char_to_idx(card["color"])
+        rank = card["rank"]
+        self.deal_specific_card(player_id, color, rank, card_index)
 
   def player_hands(self):
     """Returns a list of all hands, with cards ordered oldest to newest."""
@@ -677,13 +643,7 @@ class HanabiState(object):
 
   def legal_moves(self):
     """Returns list of legal moves for currently acting player."""
-    # MB: Work was needed to allow Return to be a valid move here.
     moves = []
-
-    # MB: Don't want to return any legal_moves from a terminal state
-    if self.is_terminal():
-      return moves
-
     c_movelist = lib.StateLegalMoves(self._state)
     num_moves = lib.NumMoves(c_movelist)
     for i in range(num_moves):
@@ -746,6 +706,7 @@ class HanabiState(object):
       self._state = None
     del self
 
+
 class AgentObservationType(enum.IntEnum):
   """Possible agent observation types, consistent with hanabi_game.h.
 
@@ -760,6 +721,7 @@ class AgentObservationType(enum.IntEnum):
   MINIMAL = 0
   CARD_KNOWLEDGE = 1
   SEER = 2
+
 
 class HanabiGame(object):
   """Game parameters describing a specific instance of Hanabi.
@@ -936,21 +898,14 @@ class HanabiObservation(object):
     Each HanabiCardKnowledge for a card gives the knowledge about the cards
     accumulated over all past reveal actions.
     """
-    debug = False
     card_knowledge_list = []
     for pid in range(self.num_players()):
       player_card_knowledge = []
-      # MB: This gets desynched after retrun/deal specific move
       hand_size = lib.ObsGetHandSize(self._observation, pid)
       for i in range(hand_size):
         c_knowledge = ffi.new("pyhanabi_card_knowledge_t*")
-        #if debug: print("MB: card_knowledge() trying to retrieve CardKnowledge for {}".format(pid))
-        c_card = ffi.new("pyhanabi_card_t*")
-        lib.ObsGetHandCard(self._observation, pid, i, c_card)
         lib.ObsGetHandCardKnowledge(self._observation, pid, i, c_knowledge)
         player_card_knowledge.append(HanabiCardKnowledge(c_knowledge))
-        if debug: print("MB: card_knowledge {} for card in hand {} retrieved for pid {}, card {}, hand_size {}".format(
-          HanabiCardKnowledge(c_knowledge),HanabiCard(c_card.color,c_card.rank), pid ,i ,hand_size))
       card_knowledge_list.append(player_card_knowledge)
     return card_knowledge_list
 
@@ -1054,17 +1009,9 @@ class ObservationEncoder(object):
 
   def encode(self, observation):
     """Encode the observation as a sequence of bits."""
-    debug = False
-    obs = observation.observation()
-    if debug:
-        print("Encoding..", self._encoder, "obs:", obs)
     c_encoding_str = lib.EncodeObservation(self._encoder,
-                                           obs)
-    if debug:
-        print("MB: EncodeObservation success")
+                                           observation.observation())
     encoding_string = encode_ffi_string(c_encoding_str)
-    if debug:
-        print("MB: STRing FF success")
     lib.DeleteString(c_encoding_str)
     # Canonical observations are bit strings, so it is ok to encode using a
     # string. For float or double observations, make a custom object

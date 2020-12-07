@@ -165,6 +165,14 @@ int MoveRank(pyhanabi_move_t* move) {
       ->Rank();
 }
 
+bool GetDealSpecificMove(int card_index, int player, int color, int rank,
+                         pyhanabi_move_t* move) {
+  REQUIRE(move != nullptr);
+  move->move = new hanabi_learning_env::HanabiMove(
+      hanabi_learning_env::HanabiMove::kDealSpecific, card_index, player, color, rank);
+  return move->move != nullptr;
+}
+
 bool GetDiscardMove(int card_index, pyhanabi_move_t* move) {
   REQUIRE(move != nullptr);
   move->move = new hanabi_learning_env::HanabiMove(
@@ -179,18 +187,10 @@ bool GetPlayMove(int card_index, pyhanabi_move_t* move) {
   return move->move != nullptr;
 }
 
-// MB: Added Move
 bool GetReturnMove(int card_index,int player, pyhanabi_move_t* move) {
   REQUIRE(move != nullptr);
   move->move = new hanabi_learning_env::HanabiMove(
       hanabi_learning_env::HanabiMove::kReturn, card_index, player, -1, -1);
-  return move->move != nullptr;
-}
-
-bool GetDealSpecificMove(int card_index, int player, int color, int rank, pyhanabi_move_t* move) {
-  REQUIRE(move != nullptr);
-  move->move = new hanabi_learning_env::HanabiMove(
-      hanabi_learning_env::HanabiMove::kDealSpecific, card_index, player, color, rank);
   return move->move != nullptr;
 }
 
@@ -346,17 +346,6 @@ void StateApplyMove(pyhanabi_state_t* state, pyhanabi_move_t* move) {
   hanabi_state->ApplyMove(*hanabi_move);
 }
 
-int StateTurnsToPlay(pyhanabi_state_t* state){
-    return reinterpret_cast<hanabi_learning_env::HanabiState*>(state->state)
-      ->TurnsToPlay();
-}
-
-void StateRemoveKnowledge(pyhanabi_state_t* state, int player, int card_index){
-    auto hanabi_state =
-      reinterpret_cast<hanabi_learning_env::HanabiState*>(state->state);
-    hanabi_state->RemoveKnowledge(player, card_index);
-}
-
 int StateCurPlayer(pyhanabi_state_t* state) {
   REQUIRE(state != nullptr);
   REQUIRE(state->state != nullptr);
@@ -364,7 +353,7 @@ int StateCurPlayer(pyhanabi_state_t* state) {
       ->CurPlayer();
 }
 
-void StateDealCard(pyhanabi_state_t* state) {
+void StateDealRandomCard(pyhanabi_state_t* state) {
   REQUIRE(state != nullptr);
   REQUIRE(state->state != nullptr);
   auto hanabi_state =
@@ -870,11 +859,9 @@ char* EncodeObservation(pyhanabi_observation_encoder_t* encoder,
   REQUIRE(observation->observation != nullptr);
   auto obs_enc = reinterpret_cast<hanabi_learning_env::ObservationEncoder*>(
       encoder->encoder);
-  REQUIRE(obs_enc != nullptr);
   auto obs = reinterpret_cast<hanabi_learning_env::HanabiObservation*>(
       observation->observation);
   std::vector<int> encoding = obs_enc->Encode(*obs);
-  assert(&encoding != nullptr);
   std::string obs_str = "";
   for (int i = 0; i < encoding.size(); i++) {
     obs_str += (encoding[i] ? "1" : "0");

@@ -19,7 +19,6 @@
 namespace hanabi_learning_env {
 
 bool HanabiMove::operator==(const HanabiMove& other_move) const {
-  //MB: Check if two moves are the same? not quite sure
   if (MoveType() != other_move.MoveType()) {
     return false;
   }
@@ -27,18 +26,18 @@ bool HanabiMove::operator==(const HanabiMove& other_move) const {
     case kPlay:
     case kDiscard:
       return CardIndex() == other_move.CardIndex();
-     case kReturn:
-      return CardIndex() == other_move.CardIndex() && TargetOffset() == other_move.TargetOffset();
     case kRevealColor:
       return TargetOffset() == other_move.TargetOffset() &&
              Color() == other_move.Color();
     case kRevealRank:
       return TargetOffset() == other_move.TargetOffset() &&
              Rank() == other_move.Rank();
+    case kDealSpecific:
     case kDeal:
       return Color() == other_move.Color() && Rank() == other_move.Rank();
-    case kDealSpecific:
-      return Color() == other_move.Color() && Rank() == other_move.Rank();
+    case kReturn:
+      return CardIndex() == other_move.CardIndex() &&
+             TargetOffset() == other_move.TargetOffset();
     default:
       return true;
   }
@@ -48,8 +47,6 @@ std::string HanabiMove::ToString() const {
   switch (MoveType()) {
     case kPlay:
       return "(Play " + std::to_string(CardIndex()) + ")";
-    case kReturn:
-      return "(Return " +  std::to_string(CardIndex()) + "from Player "+std::to_string(TargetOffset())+")";
     case kDiscard:
       return "(Discard " + std::to_string(CardIndex()) + ")";
     case kRevealColor:
@@ -72,6 +69,9 @@ std::string HanabiMove::ToString() const {
       } else {
         return std::string("(Deal XX)");
       }
+      case kReturn:
+      return "(Return " +  std::to_string(CardIndex()) + "from Player " +
+             std::to_string(TargetOffset()) + ")";
     default:
       return "(INVALID)";
   }
