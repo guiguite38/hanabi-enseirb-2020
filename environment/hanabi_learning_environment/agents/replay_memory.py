@@ -1,3 +1,6 @@
+from collections import namedtuple
+
+
 class ReplayMemory(object):
     def __init__(self, capacity):
         self.capacity = capacity

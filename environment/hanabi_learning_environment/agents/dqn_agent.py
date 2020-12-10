@@ -21,7 +21,8 @@ import random
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-from collections import namedtuple
+
+# from collections import namedtuple
 
 # from PIL import Image
 
@@ -83,10 +84,6 @@ class DQNAgent(Agent):
         self.memory = ReplayMemory(10000)
 
         self.steps_done = 0
-
-        self.Transition = namedtuple(
-            "Transition", ("state", "action", "next_state", "reward")
-        )
 
     @staticmethod
     def playable_card(card, fireworks):
