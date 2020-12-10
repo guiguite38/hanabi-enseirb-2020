@@ -85,7 +85,7 @@ def run_training(
         # Initialize the environment and state
         observation_all = env.reset()
         state = env.state
-        observation = observation_all[state.cur_player()]
+        observation = observation_all["player_observations"][state.cur_player()]
 
         for _ in count():
             # Select and perform an action
