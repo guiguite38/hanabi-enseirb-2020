@@ -79,6 +79,7 @@ def run_training(
 ):  # !! config, game_parameters necessary ?
     """Play a game, selecting random actions."""
     agent = DQNAgent(config, encoded_observation_size=956)
+    # !! 10/12/2020 : Missing second agent
     env = rl_env.make()
 
     for i_episode in range(num_episodes):
