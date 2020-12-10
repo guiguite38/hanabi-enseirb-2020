@@ -1,6 +1,9 @@
 import numpy as np
 from hanabi_learning_environment import pyhanabi
+from hanabi_learning_environment import rl_env
+
 from hanabi_learning_environment.agents.dqn_agent import DQNAgent
+from 
 import torch
 import torch.nn.functional as F
 from itertools import count
@@ -72,47 +75,32 @@ def score_game(fireworks):
     return score
 
 
-def run_training(config, game_parameters, num_episodes=50):
+def run_training(config, game_parameters, num_episodes=50): # !! config, game_parameters necessary ?
     """Play a game, selecting random actions."""
     agent = DQNAgent(config, encoded_observation_size=956)
+    env = rl_env.make()
 
     for i_episode in range(num_episodes):
         # Initialize the environment and state
-        game = pyhanabi.HanabiGame(game_parameters)
-        obs_encoder = pyhanabi.ObservationEncoder(
-            game, enc_type=pyhanabi.ObservationEncoderType.CANONICAL
-        )
-        state = game.new_initial_state()
+        env.reset()
+        state = env.state()
         observation = state.observation(state.cur_player())
 
         for _ in count():
             # Select and perform an action
-            encoded_obs = obs_encoder.encode(observation)
-            action = agent.select_action(observation, encoded_obs)
+            action = agent.select_action(observation)
 
-            state.apply_move(action)
-            new_obs = state.observation(state.cur_player())
-            new_encoded_obs = obs_encoder.encode(new_obs)
-
-            done = state.end_of_game_status == "NOT_FINISHED"
+            new_obs_all, reward, done, _ = env.step(action)
+            reward = torch.tensor([reward], device=device)
+            new_obs = new_obs_all[(state.cur_player - 1) % config["players"]]
             # Store the transition in memory
             if done:
-                agent.memory.push(encoded_obs, action, None, reward)
-                reward = (
-                    1000
-                    if state.end_of_game_status == "COMPLETED_FIREWORKS"
-                    else state.score()
-                )
-                reward = torch.tensor([reward], device=device)
+                agent.memory.push(observation["vectorized"], action, None, reward)
+                
             else:
-                reward = (
-                    score_game(new_obs["fireworks"])
-                    if observation.life_tokens() == new_obs.life_tokens()
-                    else -1
-                )  # Move has been applied, let's get the new game score
-                reward = torch.tensor([reward], device=device)
-
-                agent.memory.push(encoded_obs, action, new_encoded_obs, reward)
+                agent.memory.push(
+                    observation["vectorized"], action, new_obs["vectorized"], reward
+                )
 
             # Move to the next state
             observation = new_obs
