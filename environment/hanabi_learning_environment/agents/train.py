@@ -84,7 +84,7 @@ def run_training(
     for i_episode in range(num_episodes):
         # Initialize the environment and state
         env.reset()
-        state = env.state()
+        state = env.state
         observation = state.observation(state.cur_player())
 
         for _ in count():
