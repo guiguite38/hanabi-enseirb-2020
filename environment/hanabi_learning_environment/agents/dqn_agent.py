@@ -144,7 +144,7 @@ class DQNAgent(Agent):
                     action_index = ordered_moves[i].view(1, 1)
                 return action_space[action_index]
         else:
-            action = action_space[random.randrange(self.n_actions)]
+            action = action_space[random.randrange(len(action_space))]
             while action not in observation["legal_moves"]:
                 action = action_space[random.randrange(len(action_space))]
             return action
