@@ -83,9 +83,9 @@ def run_training(
 
     for i_episode in range(num_episodes):
         # Initialize the environment and state
-        env.reset()
+        observation_all = env.reset()
         state = env.state
-        observation = state.observation(state.cur_player())
+        observation = observation_all[state.cur_player()]
 
         for _ in count():
             # Select and perform an action
@@ -93,7 +93,7 @@ def run_training(
 
             new_obs_all, reward, done, _ = env.step(action)
             reward = torch.tensor([reward], device=device)
-            new_obs = new_obs_all[(state.cur_player - 1) % config["players"]]
+            new_obs = new_obs_all[(state.cur_player() - 1) % config["players"]]
             # Store the transition in memory
             if done:
                 agent.memory.push(observation["vectorized"], action, None, reward)
