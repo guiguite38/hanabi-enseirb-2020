@@ -137,9 +137,9 @@ class DQNAgent(Agent):
                 # second column on max result is index of where max element was
                 # found, so we pick action with the larger expected reward.
 
-                ordered_moves = self.policy_net(observation["vectorized"]).argsort(
-                    descending=True
-                )
+                ordered_moves = self.policy_net(
+                    torch.FloatTensor(observation["vectorized"])
+                ).argsort(descending=True)
                 i = 0
                 action_index = ordered_moves[i].view(1, 1)
                 while action_space[action_index] not in observation["legal_moves"]:
