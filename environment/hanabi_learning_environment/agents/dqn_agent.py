@@ -67,7 +67,7 @@ class DQNAgent(Agent):
         # initialise DQN
         self.n_actions = (
             2 * config["hand_size"] + 2 * config["players"] * config["hand_size"]
-        )  #!! handcoded... should depend on config or smth
+        )  #!! ERREUR ICI
 
         self.policy_net = DQN(
             input_size=encoded_observation_size, output_size=self.n_actions
@@ -149,6 +149,6 @@ class DQNAgent(Agent):
         else:
             action = action_space[random.randrange(self.n_actions)]
             while action not in observation["legal_moves"]:
-                action = action_space[random.randrange(self.n_actions)]
+                action = action_space[random.randrange(len(action_space))]
             return action
 
