@@ -123,6 +123,7 @@ class DQNAgent(Agent):
         return action_space
 
     def select_action(self, observation):
+        action_space = self.build_action_space(observation)
         if observation["current_player_offset"] != 0:
             return None
         sample = random.random()
@@ -135,7 +136,7 @@ class DQNAgent(Agent):
                 # t.max(1) will return largest column value of each row.
                 # second column on max result is index of where max element was
                 # found, so we pick action with the larger expected reward.
-                action_space = self.build_action_space(observation)
+
                 ordered_moves = self.policy_net(observation["vectorized"]).argsort(
                     descending=True
                 )
@@ -146,7 +147,8 @@ class DQNAgent(Agent):
                     action_index = ordered_moves[i].view(1, 1)
                 return action_space[action_index]
         else:
-            return torch.tensor(
-                [[random.randrange(self.n_actions)]], device=device, dtype=torch.long
-            )
+            action = action_space[random.randrange(self.n_actions)]
+            while action not in observation["legal_moves"]:
+                action = action_space[random.randrange(self.n_actions)]
+            return action
 
