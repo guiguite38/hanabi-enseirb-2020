@@ -3,7 +3,6 @@ from hanabi_learning_environment import pyhanabi
 from hanabi_learning_environment import rl_env
 
 from hanabi_learning_environment.agents.dqn_agent import DQNAgent
-from 
 import torch
 import torch.nn.functional as F
 from itertools import count
@@ -75,7 +74,9 @@ def score_game(fireworks):
     return score
 
 
-def run_training(config, game_parameters, num_episodes=50): # !! config, game_parameters necessary ?
+def run_training(
+    config, game_parameters, num_episodes=50
+):  # !! config, game_parameters necessary ?
     """Play a game, selecting random actions."""
     agent = DQNAgent(config, encoded_observation_size=956)
     env = rl_env.make()
@@ -96,7 +97,7 @@ def run_training(config, game_parameters, num_episodes=50): # !! config, game_pa
             # Store the transition in memory
             if done:
                 agent.memory.push(observation["vectorized"], action, None, reward)
-                
+
             else:
                 agent.memory.push(
                     observation["vectorized"], action, new_obs["vectorized"], reward
