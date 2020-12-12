@@ -39,7 +39,7 @@ def optimize_model(model):
     # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
     # columns of actions taken. These are the actions which would've been taken
     # for each batch state according to policy_net
-    tmp = torch.view(state_batch, (model.BATCH_SIZE, -1))
+    tmp = state_batch.view((model.BATCH_SIZE, -1))
     state_action_values = model.policy_net(tmp)
     # state_action_values.resize_(model.BATCH_SIZE, -1)
     print("state_action_values", state_action_values.shape)
