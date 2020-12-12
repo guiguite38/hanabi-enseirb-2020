@@ -126,7 +126,7 @@ class DQNAgent(Agent):
         if observation["current_player_offset"] != 0:
             return None
         if len(observation["legal_moves"]) == 0:
-            return None
+            return -1
         sample = random.random()
         eps_threshold = self.EPS_END + (self.EPS_START - self.EPS_END) * math.exp(
             -1.0 * self.steps_done / self.EPS_DECAY
