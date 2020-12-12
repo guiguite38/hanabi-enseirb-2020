@@ -31,9 +31,7 @@ def optimize_model(model):
         device=device,
         dtype=torch.bool,
     )
-    non_final_next_states = torch.cat(
-        torch.FloatTensor([s for s in batch.next_state if s is not None])
-    )
+    non_final_next_states = torch.cat([s for s in batch.next_state if s is not None])
     state_batch = torch.cat(batch.state)
     action_batch = torch.cat(batch.action)
     reward_batch = torch.cat(batch.reward)
@@ -105,11 +103,16 @@ def run_training(
             new_obs = new_obs_all["player_observations"][i % 2]
             # Store the transition in memory
             if done:
-                agent.memory.push(observation["vectorized"], action, None, reward)
+                agent.memory.push(
+                    torch.FloatTensor(observation["vectorized"]), action, None, reward
+                )
                 break
             else:
                 agent.memory.push(
-                    observation["vectorized"], action, new_obs["vectorized"], reward
+                    torch.FloatTensor(observation["vectorized"]),
+                    action,
+                    torch.FloatTensor(new_obs["vectorized"]),
+                    reward,
                 )
 
             # Move to the next state
