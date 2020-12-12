@@ -43,7 +43,7 @@ def optimize_model(model):
     state_action_values = model.policy_net(tmp)
     print(state_action_values.shape)
     print("action_batch:", action_batch.shape)
-    state_action_values = state_action_values.view((model.BATCH_SIZE, 1)).gather(
+    state_action_values = state_action_values.view((model.BATCH_SIZE, -1)).gather(
         1, action_batch
     )
 
