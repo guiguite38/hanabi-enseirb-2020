@@ -104,7 +104,7 @@ def run_training(
             # Store the transition in memory
             if done:
                 agent.memory.push(observation["vectorized"], action, None, reward)
-
+                break
             else:
                 agent.memory.push(
                     observation["vectorized"], action, new_obs["vectorized"], reward
@@ -113,8 +113,8 @@ def run_training(
             # Move to the next state
             observation_all = new_obs_all
 
-            # Perform one step of the optimization (on the target network)
-            optimize_model(agent)
+        # Perform one step of the optimization (on the target network)
+        optimize_model(agent)
 
         # Update the target network, copying all weights and biases in DQN
         if i_episode % agent.TARGET_UPDATE == 0:
