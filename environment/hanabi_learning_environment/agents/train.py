@@ -44,7 +44,9 @@ def optimize_model(model):
     # state_action_values.resize_(model.BATCH_SIZE, -1)
     print("state_action_values", state_action_values.shape)
     print("action_batch:", action_batch.shape)
-    state_action_values = torch.gather(state_action_values, 0, action_batch)
+    state_action_values = torch.gather(
+        state_action_values, 0, action_batch.reshape((128, 1))
+    )
 
     # Compute V(s_{t+1}) for all next states.
     # Expected values of actions for non_final_next_states are computed based
