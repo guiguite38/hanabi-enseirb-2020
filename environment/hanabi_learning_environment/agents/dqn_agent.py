@@ -69,7 +69,7 @@ class DQNAgent(Agent):
         self.n_actions = 20  # hard coded maybe do better one day
 
         self.hand_size = config.get(
-            "hand_size", 4 if config.get("num_players") > 3 else 5
+            "hand_size", 4 if config.get("players", 2) > 3 else 5
         )
 
         self.policy_net = DQN(
