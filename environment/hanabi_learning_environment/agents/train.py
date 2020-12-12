@@ -31,7 +31,9 @@ def optimize_model(model):
         device=device,
         dtype=torch.bool,
     )
-    non_final_next_states = torch.cat([s for s in batch.next_state if s is not None])
+    non_final_next_states = torch.cat(
+        torch.FloatTensor([s for s in batch.next_state if s is not None])
+    )
     state_batch = torch.cat(batch.state)
     action_batch = torch.cat(batch.action)
     reward_batch = torch.cat(batch.reward)
