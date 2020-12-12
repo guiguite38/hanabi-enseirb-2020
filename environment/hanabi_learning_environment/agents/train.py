@@ -33,6 +33,7 @@ def optimize_model(model):
     )
     non_final_next_states = torch.cat([s for s in batch.next_state if s is not None])
     state_batch = torch.cat(batch.state)
+    print("batch.action:", batch.action.shape)
     action_batch = torch.cat(batch.action)
     reward_batch = torch.cat(batch.reward)
 
@@ -42,7 +43,7 @@ def optimize_model(model):
     tmp = torch.reshape(state_batch, (model.BATCH_SIZE, -1))
     state_action_values = model.policy_net(tmp)
     print(state_action_values.shape)
-    print(action_batch.shape)
+    print("action_batch:", action_batch.shape)
     state_action_values = state_action_values.gather(1, action_batch)
 
     # Compute V(s_{t+1}) for all next states.
