@@ -66,9 +66,7 @@ class DQNAgent(Agent):
         self.EPS_DECAY = 200
         self.TARGET_UPDATE = 10
         # initialise DQN
-        self.n_actions = (
-            2 * config["hand_size"] + 2 * config["players"] * config["hand_size"]
-        )  #!! ERREUR ICI
+        self.n_actions = 20  # hard coded maybe do better one day
 
         self.policy_net = DQN(
             input_size=encoded_observation_size, output_size=self.n_actions
