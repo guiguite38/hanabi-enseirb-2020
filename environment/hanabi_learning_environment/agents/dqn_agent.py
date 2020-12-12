@@ -68,6 +68,10 @@ class DQNAgent(Agent):
         # initialise DQN
         self.n_actions = 20  # hard coded maybe do better one day
 
+        self.hand_size = config.get(
+            "hand_size", 4 if config.get("num_players") > 3 else 5
+        )
+
         self.policy_net = DQN(
             input_size=encoded_observation_size, output_size=self.n_actions
         ).to(device)
@@ -93,24 +97,24 @@ class DQNAgent(Agent):
     returns all possible actions in an ordered list
     """
         action_space = []
-        for i in range(len(observation["observed_hands"][0])):
+        for i in range(self.hand_size):
             action_space.append({"action_type": "PLAY", "card_index": i})
             action_space.append({"action_type": "DISCARD", "card_index": i})
 
         for player_offset in range(1, observation["num_players"]):
-            player_hand = observation["observed_hands"][player_offset]
-            for card in player_hand:
+            for color in ["W", "B", "R", "Y", "G"]:
                 action_space.append(
                     {
                         "action_type": "REVEAL_COLOR",
-                        "color": card["color"],
+                        "color": color,
                         "target_offset": player_offset,
                     }
                 )
+            for rank in range(5):
                 action_space.append(
                     {
                         "action_type": "RevealRank",
-                        "rank": card["rank"],
+                        "rank": rank,
                         "target_offset": player_offset,
                     }
                 )
@@ -119,7 +123,6 @@ class DQNAgent(Agent):
 
     def select_action(self, observation):
         action_space = self.build_action_space(observation)
-        print(len(action_space))
         if observation["current_player_offset"] != 0:
             return None
         sample = random.random()
