@@ -125,15 +125,14 @@ class DQNAgent(Agent):
         action_space = self.build_action_space(observation)
         if observation["current_player_offset"] != 0:
             return None
+        if len(observation["legal_moves"]) == 0:
+            return None
         sample = random.random()
         eps_threshold = self.EPS_END + (self.EPS_START - self.EPS_END) * math.exp(
             -1.0 * self.steps_done / self.EPS_DECAY
         )
         self.steps_done += 1
         if sample > eps_threshold:
-            if len(observation["legal_moves"]) == 0:
-                return None
-            print(len(observation["legal_moves"]))
             with torch.no_grad():
                 # t.max(1) will return largest column value of each row.
                 # second column on max result is index of where max element was

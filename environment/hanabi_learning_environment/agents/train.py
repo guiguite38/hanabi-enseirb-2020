@@ -17,6 +17,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def optimize_model(model):
     if len(model.memory) < model.BATCH_SIZE:
         return
+    print("Optimizing...")
     transitions = model.memory.sample(model.BATCH_SIZE)
     # Transpose the batch (see https://stackoverflow.com/a/19343/3343043 for
     # detailed explanation). This converts batch-array of Transitions
