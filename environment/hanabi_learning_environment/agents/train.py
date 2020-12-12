@@ -78,8 +78,8 @@ def run_training(
     config, game_parameters, num_episodes=50
 ):  # !! config, game_parameters necessary ?
     """Play a game, selecting random actions."""
-    agent1 = DQNAgent(config, encoded_observation_size=956)
-    agent2 = DQNAgent(config, encoded_observation_size=956)
+    agent1 = DQNAgent(config, encoded_observation_size=658)
+    agent2 = DQNAgent(config, encoded_observation_size=658)
 
     agents = [agent1, agent2]
     # !! 10/12/2020 : Missing second agent
