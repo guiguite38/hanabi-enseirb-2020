@@ -90,6 +90,8 @@ def run_training(
     agents = [agent1, agent2]
     env = rl_env.make()
 
+    total_rewards = 0
+
     for i_episode in range(num_episodes):
         # Initialize the environment and state
         observation_all = env.reset()
@@ -113,6 +115,7 @@ def run_training(
                     None,
                     reward,
                 )
+                total_rewards += reward.item()
                 break
             else:
                 agent.memory.push(
@@ -125,21 +128,25 @@ def run_training(
             # Move to the next state
             observation_all = new_obs_all
 
-        # Perform one step of the optimization (on the target network)
-        optimize_model(agent)
+        for agent in agents:
+            # Perform one step of the optimization (on the target network)
+            optimize_model(agent)
 
-        # Update the target network, copying all weights and biases in DQN
-        if i_episode % agent.TARGET_UPDATE == 0:
-            agent.target_net.load_state_dict(agent.policy_net.state_dict())
+            # Update the target network, copying all weights and biases in DQN
+            if i_episode % agent.TARGET_UPDATE == 0:
+                agent.target_net.load_state_dict(agent.policy_net.state_dict())
 
-    print("Complete")
-
+    print("Complete, saving...")
+    for i, agent in enumerate(agents):
+        torch.save(agent.policy_net.state_dict(), f"policy_net_{i}.pt")
     print("")
     print("Game done. Terminal state:")
     print("")
     print(state)
     print("")
     print("score: {}".format(state.score()))
+
+    print("Mean reward:", total_rewards / num_episodes)
 
 
 if __name__ == "__main__":
