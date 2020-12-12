@@ -39,7 +39,9 @@ def optimize_model(model):
     # Compute Q(s_t, a) - the model computes Q(s_t), then we select the
     # columns of actions taken. These are the actions which would've been taken
     # for each batch state according to policy_net
-    state_action_values = model.policy_net(state_batch).gather(1, action_batch)
+    state_action_values = model.policy_net(
+        state_batch.view(model.BATCH_SIZE, -1)
+    ).gather(1, action_batch)
 
     # Compute V(s_{t+1}) for all next states.
     # Expected values of actions for non_final_next_states are computed based
@@ -64,6 +66,7 @@ def optimize_model(model):
     for param in model.policy_net.parameters():
         param.grad.data.clamp_(-1, 1)
     model.optimizer.step()
+    print("...Optimization Done.")
 
 
 def score_game(fireworks):
@@ -83,7 +86,6 @@ def run_training(
     agent2 = DQNAgent(config, encoded_observation_size=658)
 
     agents = [agent1, agent2]
-    # !! 10/12/2020 : Missing second agent
     env = rl_env.make()
 
     for i_episode in range(num_episodes):
@@ -101,7 +103,6 @@ def run_training(
             new_obs_all, reward, done, _ = env.step(action)
             reward = torch.tensor([reward], device=device)
             new_obs = new_obs_all["player_observations"][i % 2]
-            print(action_number)
             # Store the transition in memory
             if done:
                 agent.memory.push(
