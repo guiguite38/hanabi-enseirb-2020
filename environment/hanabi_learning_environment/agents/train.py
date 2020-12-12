@@ -41,7 +41,8 @@ def optimize_model(model):
     # for each batch state according to policy_net
     state_action_values = model.policy_net(
         torch.reshape(state_batch, (model.BATCH_SIZE, -1))
-    ).gather(1, action_batch)
+    )
+    state_action_values = state_action_values.gather(1, action_batch)
 
     # Compute V(s_{t+1}) for all next states.
     # Expected values of actions for non_final_next_states are computed based
