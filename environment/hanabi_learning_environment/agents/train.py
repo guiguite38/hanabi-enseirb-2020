@@ -33,7 +33,6 @@ def optimize_model(model):
     )
     non_final_next_states = torch.cat([s for s in batch.next_state if s is not None])
     state_batch = torch.cat(batch.state)
-    print("batch.action:", len(batch.action), "x", batch.action[0].shape)
     action_batch = torch.cat(batch.action)
     reward_batch = torch.cat(batch.reward)
 
