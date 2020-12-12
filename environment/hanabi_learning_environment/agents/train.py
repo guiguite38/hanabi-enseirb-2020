@@ -41,11 +41,8 @@ def optimize_model(model):
     # for each batch state according to policy_net
     tmp = state_batch.view((model.BATCH_SIZE, -1))
     state_action_values = model.policy_net(tmp)
-    # state_action_values.resize_(model.BATCH_SIZE, -1)
-    print("state_action_values", state_action_values.shape)
-    print("action_batch:", action_batch.shape)
     state_action_values = torch.gather(
-        state_action_values, 0, action_batch.reshape((128, 1))
+        state_action_values, 0, action_batch.reshape((model.BATCH_SIZE, 1))
     )
 
     # Compute V(s_{t+1}) for all next states.
@@ -55,7 +52,9 @@ def optimize_model(model):
     # state value or 0 in case the state was final.
     next_state_values = torch.zeros(model.BATCH_SIZE, device=device)
     next_state_values[non_final_mask] = (
-        model.target_net(non_final_next_states).max(1)[0].detach()
+        model.target_net(non_final_next_states.reshape((model.BATCH_SIZE, -1)))
+        .max(1)[0]
+        .detach()
     )
     # Compute the expected Q values
     expected_state_action_values = (next_state_values * model.GAMMA) + reward_batch
