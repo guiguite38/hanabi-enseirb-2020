@@ -110,7 +110,7 @@ def run_training(
             if done:
                 agent.memory.push(
                     torch.FloatTensor(observation["vectorized"]),
-                    torch.LongTensor(action_number),
+                    torch.LongTensor([action_number]),
                     None,
                     reward,
                 )
@@ -118,7 +118,7 @@ def run_training(
             else:
                 agent.memory.push(
                     torch.FloatTensor(observation["vectorized"]),
-                    torch.LongTensor(action_number),
+                    torch.LongTensor([action_number]),
                     torch.FloatTensor(new_obs["vectorized"]),
                     reward,
                 )
