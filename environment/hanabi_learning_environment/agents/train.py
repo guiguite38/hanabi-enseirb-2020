@@ -101,6 +101,7 @@ def run_training(
             new_obs_all, reward, done, _ = env.step(action)
             reward = torch.tensor([reward], device=device)
             new_obs = new_obs_all["player_observations"][i % 2]
+            print(action_number)
             # Store the transition in memory
             if done:
                 agent.memory.push(
