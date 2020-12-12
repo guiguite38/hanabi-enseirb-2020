@@ -121,6 +121,7 @@ class DQNAgent(Agent):
 
     def select_action(self, observation):
         action_space = self.build_action_space(observation)
+        print(len(action_space))
         if observation["current_player_offset"] != 0:
             return None
         sample = random.random()
