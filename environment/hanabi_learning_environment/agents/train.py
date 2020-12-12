@@ -41,6 +41,7 @@ def optimize_model(model):
     # for each batch state according to policy_net
     tmp = torch.reshape(state_batch, (model.BATCH_SIZE, -1))
     state_action_values = model.policy_net(tmp)
+    print(state_action_values.shape)
     state_action_values = state_action_values.gather(1, action_batch)
 
     # Compute V(s_{t+1}) for all next states.
