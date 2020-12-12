@@ -40,7 +40,7 @@ def optimize_model(model):
     # columns of actions taken. These are the actions which would've been taken
     # for each batch state according to policy_net
     state_action_values = model.policy_net(
-        state_batch.view(model.BATCH_SIZE, -1)
+        torch.reshape(state_batch, (model.BATCH_SIZE, -1))
     ).gather(1, action_batch)
 
     # Compute V(s_{t+1}) for all next states.
