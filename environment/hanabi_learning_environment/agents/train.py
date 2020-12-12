@@ -22,7 +22,7 @@ def optimize_model(model):
     # Transpose the batch (see https://stackoverflow.com/a/19343/3343043 for
     # detailed explanation). This converts batch-array of Transitions
     # to Transition of batch-arrays.
-    batch = model.Transition(*zip(*transitions))
+    batch = model.memory.Transition(*zip(*transitions))
 
     # Compute a mask of non-final states and concatenate the batch elements
     # (a final state would've been the one after which simulation ended)
