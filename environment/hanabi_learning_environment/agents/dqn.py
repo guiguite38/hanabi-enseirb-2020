@@ -7,7 +7,6 @@ class DQN(nn.Module):
         super(DQN, self).__init__()
 
         # We begin with a thre layer fully connected neural network
-        input_size = 1000
         self.ln1 = nn.Linear(input_size, 254)
         self.dr1 = nn.Dropout(0.3)
         self.ln2 = nn.Linear(254, 254)
