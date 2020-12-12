@@ -124,9 +124,7 @@ class DQNAgent(Agent):
     def select_action(self, observation):
         action_space = self.build_action_space(observation)
         if observation["current_player_offset"] != 0:
-            return None
-        if len(observation["legal_moves"]) == 0:
-            return -1
+            return None, None
         sample = random.random()
         eps_threshold = self.EPS_END + (self.EPS_START - self.EPS_END) * math.exp(
             -1.0 * self.steps_done / self.EPS_DECAY
@@ -146,10 +144,10 @@ class DQNAgent(Agent):
                 while action_space[action_index] not in observation["legal_moves"]:
                     i += 1
                     action_index = ordered_moves[i].view(1, 1)
-                return action_space[action_index]
+                return action_space[action_index], action_index
         else:
-            action = action_space[random.randrange(len(action_space))]
-            while action not in observation["legal_moves"]:
-                action = action_space[random.randrange(len(action_space))]
-            return action
+            action_index = random.randrange(len(action_space))
+            while action_space[action_index] not in observation["legal_moves"]:
+                action_index = random.randrange(len(action_space))
+            return action_space[action_index], action_index
 

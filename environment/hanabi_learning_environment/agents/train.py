@@ -96,7 +96,7 @@ def run_training(
             observation = observation_all["player_observations"][i % 2]
 
             # Select and perform an action
-            action = agent.select_action(observation)
+            action, action_number = agent.select_action(observation)
 
             new_obs_all, reward, done, _ = env.step(action)
             reward = torch.tensor([reward], device=device)
@@ -104,13 +104,16 @@ def run_training(
             # Store the transition in memory
             if done:
                 agent.memory.push(
-                    torch.FloatTensor(observation["vectorized"]), action, None, reward
+                    torch.FloatTensor(observation["vectorized"]),
+                    torch.FloatTensor(action_number),
+                    None,
+                    reward,
                 )
                 break
             else:
                 agent.memory.push(
                     torch.FloatTensor(observation["vectorized"]),
-                    action,
+                    torch.FloatTensor(action_number),
                     torch.FloatTensor(new_obs["vectorized"]),
                     reward,
                 )
