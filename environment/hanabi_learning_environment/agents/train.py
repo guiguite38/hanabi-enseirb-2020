@@ -89,18 +89,17 @@ def run_training(
         # Initialize the environment and state
         observation_all = env.reset()
         state = env.state
-        observation = observation_all["player_observations"][state.cur_player()]
 
         for i in count():
-            agent = agents[i%2]
+            agent = agents[i % 2]
+            observation = observation_all["player_observations"][i % 2]
+
             # Select and perform an action
             action = agent.select_action(observation)
 
             new_obs_all, reward, done, _ = env.step(action)
             reward = torch.tensor([reward], device=device)
-            new_obs = new_obs_all["player_observations"][
-                (state.cur_player() - 1) % config["players"]
-            ]
+            new_obs = new_obs_all["player_observations"][i % 2]
             # Store the transition in memory
             if done:
                 agent.memory.push(observation["vectorized"], action, None, reward)
@@ -111,7 +110,7 @@ def run_training(
                 )
 
             # Move to the next state
-            observation = new_obs
+            observation_all = new_obs_all
 
             # Perform one step of the optimization (on the target network)
             optimize_model(agent)
