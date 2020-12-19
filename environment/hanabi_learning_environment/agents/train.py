@@ -153,7 +153,7 @@ def run_training(
             buffer = agent_buffer[i % 2]
             copy = buffer.clone()
             buffer[658:] = copy[:658 * 3]
-            buffer[:658] = observation["vectorized"]
+            buffer[:658] = np.asarray(observation["vectorized"])
             # if len(episode_memory) > 3 :
             #     effective_observation = np.concatenate((episode_memory[len(episode_memory)-4:][0], observation)) 
             # elif len(episode_memory) == 0:
@@ -171,7 +171,7 @@ def run_training(
             # Prepare next buffer
             next_buffer = buffer.clone()
             next_buffer[658:] = buffer[:658 * 3]
-            next_buffer[:658] = new_obs["vectorized"]
+            next_buffer[:658] = np.asarray(new_obs["vectorized"])
 
             if is_hint(action_number, agent.action_space):
                 episode_hints[i % 2] += 1
