@@ -9,6 +9,8 @@ from itertools import count
 # if gpu is to be used
 import os
 
+from torch.utils.tensorboard import SummaryWriter
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 writer = SummaryWriter()
@@ -222,5 +224,5 @@ if __name__ == "__main__":
     run_training(
         {"players": flags["players"], "colors": 5, "ranks": 5, "hand_size": 5},
         {"players": 2, "random_start_player": True},
-        num_episodes=20000,
+        num_episodes=200,
     )
