@@ -139,7 +139,7 @@ class DQNAgent(Agent):
                 # found, so we pick action with the larger expected reward.
 
                 ordered_moves = self.policy_net(
-                    torch.FloatTensor([x for x in o["vectorized"] for o in observation])
+                    torch.FloatTensor([x for o in observation for x in o["vectorized"]])
                 ).argsort(descending=True)
                 i = 0
                 action_index = ordered_moves[i].view(1, 1)
