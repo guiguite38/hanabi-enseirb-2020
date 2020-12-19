@@ -125,7 +125,7 @@ class DQNAgent(Agent):
 
     def select_action(self, observation):
         action_space = self.action_space
-        if observation["current_player_offset"] != 0:
+        if observation[-1]["current_player_offset"] != 0:
             return None, None
         sample = random.random()
         eps_threshold = self.EPS_END + (self.EPS_START - self.EPS_END) * math.exp(
@@ -139,17 +139,17 @@ class DQNAgent(Agent):
                 # found, so we pick action with the larger expected reward.
 
                 ordered_moves = self.policy_net(
-                    torch.FloatTensor(observation["vectorized"])
+                    torch.FloatTensor([x for x in o["vectorized"] for o in observation])
                 ).argsort(descending=True)
                 i = 0
                 action_index = ordered_moves[i].view(1, 1)
-                while action_space[action_index] not in observation["legal_moves"]:
+                while action_space[action_index] not in observation[-1]["legal_moves"]:
                     i += 1
                     action_index = ordered_moves[i].view(1, 1)
                 return action_space[action_index], action_index.item()
         else:
             action_index = random.randrange(len(action_space))
-            while action_space[action_index] not in observation["legal_moves"]:
+            while action_space[action_index] not in observation[-1]["legal_moves"]:
                 action_index = random.randrange(len(action_space))
             return action_space[action_index], action_index
 
