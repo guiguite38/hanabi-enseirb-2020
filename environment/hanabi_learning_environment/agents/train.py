@@ -84,9 +84,8 @@ def is_hint(action, action_space):
     dict_action = action_space[action]
     return dict_action["action_type"].startswith("REVEAL")
 
-def backprop_reward_if_card_is_played(episode_memory, action, reward, action_space, nplayers, observation):
+def backprop_reward_if_card_is_played(episode_memory, dict_action, reward, action_space, nplayers, observation):
     # Check if action is playing card
-    dict_action = action_space[action]
     if dict_action["action_type"] != "PLAY":
         return
 
