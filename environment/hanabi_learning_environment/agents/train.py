@@ -159,7 +159,7 @@ def run_training(
             new_obs_all, reward, done, _ = env.step(action)
             reward = torch.tensor([reward], device=device)
             new_obs = new_obs_all["player_observations"][i % 2]
-            backprop_reward_if_card_is_played(episode_memory, action, reward, agent.action_space, len(agents), observation_all[(i + 1) % 2])
+            backprop_reward_if_card_is_played(episode_memory, action, reward, agent.action_space, len(agents), observation_all["player_observations"][(i + 1) % 2])
 
             if is_hint(action, agent.action_space):
                 episode_hints[i % 2] += 1
