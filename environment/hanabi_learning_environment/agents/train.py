@@ -151,7 +151,8 @@ def run_training(
 
             # Select and perform an action
             buffer = agent_buffer[i % 2]
-            buffer[658:] = buffer[:658 * 3]
+            copy = buffer.clone()
+            buffer[658:] = copy[:658 * 3]
             buffer[:658] = observation["vectorized"]
             # if len(episode_memory) > 3 :
             #     effective_observation = np.concatenate((episode_memory[len(episode_memory)-4:][0], observation)) 
@@ -167,9 +168,10 @@ def run_training(
             new_obs = new_obs_all["player_observations"][i % 2]
             backprop_reward_if_card_is_played(episode_memory, action, reward, agent.action_space, len(agents), observation_all["player_observations"][(i + 1) % 2])
 
+            # Prepare next buffer
             next_buffer = buffer.clone()
-            next_buffer[658:] = next_buffer[:658 * 3]
-            next_buffer[:658] = next_buffer["vectorized"]
+            next_buffer[658:] = buffer[:658 * 3]
+            next_buffer[:658] = new_obs["vectorized"]
 
             if is_hint(action_number, agent.action_space):
                 episode_hints[i % 2] += 1
