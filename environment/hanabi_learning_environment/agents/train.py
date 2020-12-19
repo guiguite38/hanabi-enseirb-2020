@@ -15,6 +15,9 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 writer = SummaryWriter()
 
+
+STATE_SIZE = 4 * 658      # 4 previous observations are viewed to act
+
 def optimize_model(model, epoch):
     if len(model.memory) < model.BATCH_SIZE:
         return
@@ -52,7 +55,7 @@ def optimize_model(model, epoch):
     # state value or 0 in case the state was final.
     next_state_values = torch.zeros(model.BATCH_SIZE, device=device)
     next_state_values[non_final_mask] = (
-        model.target_net(non_final_next_states.reshape((-1, 658))).max(1)[0].detach()
+        model.target_net(non_final_next_states.reshape((-1, STATE_SIZE))).max(1)[0].detach()
     )
     # Compute the expected Q values
     expected_state_action_values = (next_state_values * model.GAMMA) + reward_batch
@@ -124,9 +127,8 @@ def run_training(
     config, game_parameters, num_episodes=50
 ):  # !! config, game_parameters necessary ?
     """Play a game, selecting random actions."""
-    observation_size = 658*4 # 4 previous observations are viewed to act
-    agent1 = DQNAgent(config, encoded_observation_size=observation_size) 
-    agent2 = DQNAgent(config, encoded_observation_size=observation_size)
+    agent1 = DQNAgent(config, encoded_observation_size=STATE_SIZE) 
+    agent2 = DQNAgent(config, encoded_observation_size=STATE_SIZE)
 
     agents = [agent1, agent2]
     env = rl_env.make()
@@ -142,7 +144,7 @@ def run_training(
 
         episode_hints = [0 for x in agents]
 
-        agent_buffer = [torch.zeros(observation_size) for agent in agents]
+        agent_buffer = [torch.zeros(STATE_SIZE) for agent in agents]
 
         for i in count():
             agent = agents[i % 2]
@@ -152,7 +154,7 @@ def run_training(
             # Select and perform an action
             buffer = agent_buffer[i % 2]
             copy = buffer.clone()
-            buffer[658:] = copy[:658 * 3]
+            buffer[658:] = copy[:STATE_SIZE - 658]
             buffer[:658] = torch.from_numpy(np.asarray(observation["vectorized"]))
             # if len(episode_memory) > 3 :
             #     effective_observation = np.concatenate((episode_memory[len(episode_memory)-4:][0], observation)) 
@@ -170,7 +172,7 @@ def run_training(
 
             # Prepare next buffer
             next_buffer = buffer.clone()
-            next_buffer[658:] = buffer[:658 * 3]
+            next_buffer[658:] = buffer[:STATE_SIZE - 658]
             next_buffer[:658] = torch.from_numpy(np.asarray(new_obs["vectorized"]))
 
             if is_hint(action_number, agent.action_space):
