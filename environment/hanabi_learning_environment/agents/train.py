@@ -98,9 +98,9 @@ def backprop_reward_if_card_is_played(episode_memory, dict_action, reward, actio
     # Iterate over over past actions and look for hint of color/rank on this card
     player = -1 % nplayers
     for memory in reversed(episode_memory):
-        action = memory[1].item()
-        dict_action = action_space[action]
-        if is_hint(action, dict_action) and player != 0:
+        action_number = memory[1].item()
+        dict_action = action_space[action_number]
+        if is_hint(action_number, action_space) and player != 0:
             player_offset = dict_action["target_offset"]
             if (player_offset + player) % nplayers == 0:
                 # Player which was targeted was me
