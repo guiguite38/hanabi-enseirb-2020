@@ -8,17 +8,14 @@ class DQN(nn.Module):
 
         # We begin with a thre layer fully connected neural network
         self.ln1 = nn.Linear(input_size, 254)
-        self.dr1 = nn.Dropout(0.3)
         self.ln2 = nn.Linear(254, 254)
-        self.dr2 = nn.Dropout(0.3)
-        self.ln3 = nn.Linear(254, 254)
-        self.dr3 = nn.Dropout(0.3)
-        self.ln4 = nn.Linear(254, output_size)
+        self.dr1 = nn.Dropout(0.3)
+        self.ln3 = nn.Linear(254, output_size)
+
 
     # Called with either one element to determine next action, or a batch
     # during optimization. Returns tensor([[left0exp,right0exp]...]).
     def forward(self, x):
-        x = F.relu(self.dr1(self.ln1(x)))
-        x = F.relu(self.dr2(self.ln2(x)))
-        x = F.relu(self.dr3(self.ln3(x)))
-        return self.ln4(x)
+        x = F.relu(self.ln1(x))
+        x = F.relu(self.dr1(self.ln2(x)))
+        return self.ln3(x)

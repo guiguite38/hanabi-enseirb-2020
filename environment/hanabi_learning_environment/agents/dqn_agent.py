@@ -87,21 +87,23 @@ class DQNAgent(Agent):
 
         self.steps_done = 0
 
+        self.action_space = self.build_action_space()
+
     @staticmethod
     def playable_card(card, fireworks):
         """A card is playable if it can be placed on the fireworks pile."""
         return card["rank"] == fireworks[card["color"]]
 
-    def build_action_space(self, observation):
+    def build_action_space(self):
         """
-    returns all possible actions in an ordered list
-    """
+        returns all possible actions in an ordered list
+        """
         action_space = []
         for i in range(self.hand_size):
             action_space.append({"action_type": "PLAY", "card_index": i})
             action_space.append({"action_type": "DISCARD", "card_index": i})
 
-        for player_offset in range(1, observation["num_players"]):
+        for player_offset in range(1, self.config.get("players", 2)):
             for color in ["W", "B", "R", "Y", "G"]:
                 action_space.append(
                     {
@@ -122,7 +124,7 @@ class DQNAgent(Agent):
         return action_space
 
     def select_action(self, observation):
-        action_space = self.build_action_space(observation)
+        action_space = self.action_space
         if observation["current_player_offset"] != 0:
             return None, None
         sample = random.random()
