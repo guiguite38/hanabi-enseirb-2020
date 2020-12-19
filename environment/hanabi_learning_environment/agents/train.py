@@ -190,7 +190,7 @@ def run_training(
                 episode_memory.append([
                     buffer.clone(),
                     torch.LongTensor([action_number]),
-                    new_buffer,
+                    next_buffer,
                     reward,
                 ])
 
