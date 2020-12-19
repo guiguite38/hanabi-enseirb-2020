@@ -105,7 +105,7 @@ def backprop_reward_if_card_is_played(episode_memory, dict_action, reward, actio
             if (player_offset + player) % nplayers == 0:
                 # Player which was targeted was me
                 if color == dict_action.get("color", None) or rank == dict_action.get("rank", None):
-                    memory[3][0] += reward
+                    memory[3] += reward
         elif dict_action["action_type"] in ("PLAY", "DISCARD") and player == 0: 
             offset = dict_action["card_index"]
             # That means we drew the played card at this moment
