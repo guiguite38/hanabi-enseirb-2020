@@ -160,7 +160,7 @@ def run_training(
             new_obs = new_obs_all["player_observations"][i % 2]
             backprop_reward_if_card_is_played(episode_memory, action, reward, agent.action_space, len(agents), observation_all["player_observations"][(i + 1) % 2])
 
-            if is_hint(action, agent.action_space):
+            if is_hint(action_number, agent.action_space):
                 episode_hints[i % 2] += 1
            
             # Store the transition in memory
