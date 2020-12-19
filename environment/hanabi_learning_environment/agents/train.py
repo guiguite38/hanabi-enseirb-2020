@@ -3,6 +3,8 @@ from hanabi_learning_environment import pyhanabi
 from hanabi_learning_environment import rl_env
 from hanabi_learning_environment.agents.dqn_agent import DQNAgent
 
+from tqdm import trange
+
 import torch
 import torch.nn.functional as F
 from itertools import count
@@ -15,8 +17,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 writer = SummaryWriter()
 
-
-STATE_SIZE = 4 * 658      # 4 previous observations are viewed to act
+OBSERVATION_SIZE = 658
+STATE_SIZE = 4 * OBSERVATION_SIZE      # 4 previous observations are viewed to act
 
 def optimize_model(model, epoch):
     if len(model.memory) < model.BATCH_SIZE:
@@ -135,7 +137,7 @@ def run_training(
 
     total_rewards = 0
 
-    for i_episode in range(num_episodes):
+    for i_episode in trange(num_episodes):
         # Initialize the environment and state
         observation_all = env.reset()
         state = env.state
@@ -154,8 +156,8 @@ def run_training(
             # Select and perform an action
             buffer = agent_buffer[i % 2]
             copy = buffer.clone()
-            buffer[658:] = copy[:STATE_SIZE - 658]
-            buffer[:658] = torch.from_numpy(np.asarray(observation["vectorized"]))
+            buffer[OBSERVATION_SIZE:] = copy[:STATE_SIZE - OBSERVATION_SIZE]
+            buffer[:OBSERVATION_SIZE] = torch.from_numpy(np.asarray(observation["vectorized"]))
             # if len(episode_memory) > 3 :
             #     effective_observation = np.concatenate((episode_memory[len(episode_memory)-4:][0], observation)) 
             # elif len(episode_memory) == 0:
@@ -172,8 +174,8 @@ def run_training(
 
             # Prepare next buffer
             next_buffer = buffer.clone()
-            next_buffer[658:] = buffer[:STATE_SIZE - 658]
-            next_buffer[:658] = torch.from_numpy(np.asarray(new_obs["vectorized"]))
+            next_buffer[OBSERVATION_SIZE:] = buffer[:STATE_SIZE - OBSERVATION_SIZE]
+            next_buffer[:OBSERVATION_SIZE] = torch.from_numpy(np.asarray(new_obs["vectorized"]))
 
             if is_hint(action_number, agent.action_space):
                 episode_hints[i % 2] += 1
