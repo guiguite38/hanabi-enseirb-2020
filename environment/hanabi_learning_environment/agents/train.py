@@ -124,8 +124,9 @@ def run_training(
     config, game_parameters, num_episodes=50
 ):  # !! config, game_parameters necessary ?
     """Play a game, selecting random actions."""
-    agent1 = DQNAgent(config, encoded_observation_size=658*4) # les 4 dernières observations sont utilisées comme état 
-    agent2 = DQNAgent(config, encoded_observation_size=658*4)
+    observation_size = 658*4 # 4 previous observations are viewed to act
+    agent1 = DQNAgent(config, encoded_observation_size=observation_size) 
+    agent2 = DQNAgent(config, encoded_observation_size=observation_size)
 
     agents = [agent1, agent2]
     env = rl_env.make()
@@ -141,24 +142,34 @@ def run_training(
 
         episode_hints = [0 for x in agents]
 
+        agent_buffer = [torch.zeros(observation_size) for agent in agents]
+
         for i in count():
             agent = agents[i % 2]
             observation = observation_all["player_observations"][i % 2]
 
-            # Select and perform an action
-            if len(episode_memory) > 3 :
-                effective_observation = np.concatenate((episode_memory[len(episode_memory)-4:][0], observation)) 
-            elif len(episode_memory) == 0:
-                effective_observation = np.tile(observation,4)
-            else:
-                effective_observation = np.concatenate((episode_memory[:][0], np.tile(observation,(4-len(episode_memory)))))
 
-            action, action_number = agent.select_action(effective_observation)
+            # Select and perform an action
+            buffer = agent_buffer[i % 2]
+            buffer[658:] = buffer[:658 * 3]
+            buffer[:658] = observation["vectorized"]
+            # if len(episode_memory) > 3 :
+            #     effective_observation = np.concatenate((episode_memory[len(episode_memory)-4:][0], observation)) 
+            # elif len(episode_memory) == 0:
+            #     effective_observation = np.tile(observation,4)
+            # else:
+            #     effective_observation = np.concatenate((episode_memory[:][0], np.tile(observation,(4-len(episode_memory)))))
+
+            action, action_number = agent.select_action(observation, buffer)
 
             new_obs_all, reward, done, _ = env.step(action)
             reward = torch.tensor([reward], device=device)
             new_obs = new_obs_all["player_observations"][i % 2]
             backprop_reward_if_card_is_played(episode_memory, action, reward, agent.action_space, len(agents), observation_all["player_observations"][(i + 1) % 2])
+
+            next_buffer = buffer.clone()
+            next_buffer[658:] = next_buffer[:658 * 3]
+            next_buffer[:658] = next_buffer["vectorized"]
 
             if is_hint(action_number, agent.action_space):
                 episode_hints[i % 2] += 1
@@ -166,7 +177,7 @@ def run_training(
             # Store the transition in memory
             if done:
                 episode_memory.append([
-                    torch.FloatTensor(observation["vectorized"]),
+                    buffer.clone(),
                     torch.LongTensor([action_number]),
                     None,
                     reward,
@@ -175,9 +186,9 @@ def run_training(
                 break
             else:
                 episode_memory.append([
-                    torch.FloatTensor(observation["vectorized"]),
+                    buffer.clone(),
                     torch.LongTensor([action_number]),
-                    torch.FloatTensor(new_obs["vectorized"]),
+                    new_buffer,
                     reward,
                 ])
 
