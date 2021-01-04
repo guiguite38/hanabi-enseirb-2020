@@ -216,7 +216,9 @@ def run_training(
 
         for agent in agents:
             # Perform one step of the optimization (on the target network)
+            agent.policy_net.train()
             optimize_model(agent, i_episode)
+            agent.policy_net.eval()
 
             # Update the target network, copying all weights and biases in DQN
             if i_episode % agent.TARGET_UPDATE == 0:
