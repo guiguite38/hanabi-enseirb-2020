@@ -20,6 +20,7 @@ writer = SummaryWriter()
 OBSERVATION_SIZE = 658
 STATE_SIZE = 4 * OBSERVATION_SIZE      # 4 previous observations are viewed to act
 
+
 def optimize_model(model, epoch):
     if len(model.memory) < model.BATCH_SIZE:
         return
@@ -89,17 +90,18 @@ def is_hint(action, action_space):
     dict_action = action_space[action]
     return dict_action["action_type"].startswith("REVEAL")
 
+
 def backprop_reward_if_card_is_played(episode_memory, dict_action, reward, action_space, nplayers, observation):
     # Check if action is playing card
-    if dict_action["action_type"] != "PLAY":
-        return
+    if dict_action["action_type"] != "PLAY" or reward.item() == 0:
+        return False
 
     card_index = dict_action["card_index"]
     # Get card color and rank
     card = observation["observed_hands"][-1][card_index]
     color = card["color"]
     rank = card["rank"]
-    
+
     # Iterate over over past actions and look for hint of color/rank on this card
     player = -1 % nplayers
     for memory in reversed(episode_memory):
@@ -111,7 +113,8 @@ def backprop_reward_if_card_is_played(episode_memory, dict_action, reward, actio
                 # Player which was targeted was me
                 if color == dict_action.get("color", None) or rank == dict_action.get("rank", None):
                     memory[3] += reward
-        elif dict_action["action_type"] in ("PLAY", "DISCARD") and player == 0: 
+                    return memory[3].item() > 0
+        elif dict_action["action_type"] in ("PLAY", "DISCARD") and player == 0:
             offset = dict_action["card_index"]
             # That means we drew the played card at this moment
             # So no further reward back prop can occur
@@ -124,12 +127,14 @@ def backprop_reward_if_card_is_played(episode_memory, dict_action, reward, actio
         player -= 1
         player %= nplayers
 
+    return False
+
 
 def run_training(
     config, game_parameters, num_episodes=50
 ):  # !! config, game_parameters necessary ?
     """Play a game, selecting random actions."""
-    agent1 = DQNAgent(config, encoded_observation_size=STATE_SIZE) 
+    agent1 = DQNAgent(config, encoded_observation_size=STATE_SIZE)
     agent2 = DQNAgent(config, encoded_observation_size=STATE_SIZE)
 
     agents = [agent1, agent2]
@@ -152,25 +157,18 @@ def run_training(
             agent = agents[i % 2]
             observation = observation_all["player_observations"][i % 2]
 
-
             # Select and perform an action
             buffer = agent_buffer[i % 2]
             copy = buffer.clone()
             buffer[OBSERVATION_SIZE:] = copy[:STATE_SIZE - OBSERVATION_SIZE]
             buffer[:OBSERVATION_SIZE] = torch.from_numpy(np.asarray(observation["vectorized"]))
-            # if len(episode_memory) > 3 :
-            #     effective_observation = np.concatenate((episode_memory[len(episode_memory)-4:][0], observation)) 
-            # elif len(episode_memory) == 0:
-            #     effective_observation = np.tile(observation,4)
-            # else:
-            #     effective_observation = np.concatenate((episode_memory[:][0], np.tile(observation,(4-len(episode_memory)))))
 
             action, action_number = agent.select_action(observation, buffer)
 
             new_obs_all, reward, done, _ = env.step(action)
             reward = torch.tensor([reward], device=device)
             new_obs = new_obs_all["player_observations"][i % 2]
-            backprop_reward_if_card_is_played(episode_memory, action, reward, agent.action_space, len(agents), observation_all["player_observations"][(i + 1) % 2])
+            is_important_memory = backprop_reward_if_card_is_played(episode_memory, action, reward, agent.action_space, len(agents), observation_all["player_observations"][(i + 1) % 2])
 
             # Prepare next buffer
             next_buffer = buffer.clone()
@@ -179,7 +177,7 @@ def run_training(
 
             if is_hint(action_number, agent.action_space):
                 episode_hints[i % 2] += 1
-           
+
             # Store the transition in memory
             if done:
                 episode_memory.append([
@@ -187,7 +185,7 @@ def run_training(
                     torch.LongTensor([action_number]),
                     None,
                     reward,
-                ])
+                    is_important_memory])
                 total_rewards += reward.item()
                 break
             else:
@@ -196,7 +194,7 @@ def run_training(
                     torch.LongTensor([action_number]),
                     next_buffer,
                     reward,
-                ])
+                    is_important_memory])
 
             # Move to the next state
             observation_all = new_obs_all
@@ -205,7 +203,6 @@ def run_training(
         for memory in episode_memory:
             for agent in agents:
                 agent.memory.push(memory)
-
 
         # Add metric
         for i, agent in enumerate(agents):
