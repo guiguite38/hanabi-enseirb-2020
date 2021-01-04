@@ -48,7 +48,7 @@ def optimize_model(model, epoch):
     tmp = state_batch.view((model.BATCH_SIZE, -1))
     state_action_values = model.policy_net(tmp)
     state_action_values = torch.gather(
-        state_action_values, 0, action_batch.reshape((model.BATCH_SIZE, 1))
+        state_action_values, 1, action_batch.reshape((model.BATCH_SIZE, 1))
     )
 
     # Compute V(s_{t+1}) for all next states.
@@ -243,5 +243,5 @@ if __name__ == "__main__":
     run_training(
         {"players": flags["players"], "colors": 5, "ranks": 5, "hand_size": 5},
         {"players": 2, "random_start_player": True},
-        num_episodes=500,
+        num_episodes=1000,
     )

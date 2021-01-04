@@ -15,22 +15,14 @@
 
 from hanabi_learning_environment.rl_env import Agent
 
-# import gym
 import math
 import random
-import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-
-# from collections import namedtuple
-
-# from PIL import Image
 
 import torch
 
 import torch.optim as optim
-
-import torchvision.transforms as T
 
 from replay_memory import ReplayMemory
 from dqn import DQN
@@ -81,6 +73,7 @@ class DQNAgent(Agent):
 
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
+        self.policy_net.eval()
 
         self.optimizer = optim.RMSprop(self.policy_net.parameters())
         self.memory = ReplayMemory(10000)
@@ -139,8 +132,8 @@ class DQNAgent(Agent):
                 # found, so we pick action with the larger expected reward.
 
                 ordered_moves = self.policy_net(
-                    vector
-                ).argsort(descending=True)
+                    vector.unsqueeze(0)
+                ).argsort(descending=True)[0]
                 i = 0
                 action_index = ordered_moves[i].view(1, 1)
                 while action_space[action_index] not in observation["legal_moves"]:
@@ -152,4 +145,3 @@ class DQNAgent(Agent):
             while action_space[action_index] not in observation["legal_moves"]:
                 action_index = random.randrange(len(action_space))
             return action_space[action_index], action_index
-
