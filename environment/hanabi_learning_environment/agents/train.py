@@ -241,5 +241,5 @@ if __name__ == "__main__":
     run_training(
         {"players": flags["players"], "colors": 5, "ranks": 5, "hand_size": 5},
         {"players": 2, "random_start_player": True},
-        num_episodes=200,
+        num_episodes=500,
     )
