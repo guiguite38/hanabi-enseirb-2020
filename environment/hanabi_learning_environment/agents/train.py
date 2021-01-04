@@ -143,6 +143,9 @@ def run_training(
     total_rewards = 0
 
     for i_episode in trange(num_episodes):
+
+        start_reward = total_rewards
+
         # Initialize the environment and state
         observation_all = env.reset()
         state = env.state
@@ -208,6 +211,9 @@ def run_training(
         for i, agent in enumerate(agents):
             writer.add_scalar(f"hints agent {i + 1}", episode_hints[i], i_episode)
 
+        writer.add_scalar("cumulative reward", total_rewards, i_episode)
+        writer.add_scalar("episode reward", total_rewards - start_reward, i_episode)
+
         for agent in agents:
             # Perform one step of the optimization (on the target network)
             optimize_model(agent, i_episode)
@@ -225,8 +231,6 @@ def run_training(
     print(state)
     print("")
     print("score: {}".format(state.score()))
-
-    print("Mean reward:", total_rewards / num_episodes)
 
 
 if __name__ == "__main__":
