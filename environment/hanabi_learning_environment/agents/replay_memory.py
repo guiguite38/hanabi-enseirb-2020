@@ -10,7 +10,7 @@ class ReplayMemory(object):
         self.Transition = namedtuple(
             "Transition", ("state", "action", "next_state", "reward", "rounds_remaining")
         )
-        self.rounds_for_important_memories = 3
+        self.rounds_for_important_memories = 6
 
     def push(self, li):
         """Saves a transition."""
