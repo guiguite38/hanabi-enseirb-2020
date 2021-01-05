@@ -79,6 +79,7 @@ class DQNAgent(Agent):
         self.memory = ReplayMemory(10000)
 
         self.steps_done = 0
+        self.last_hint = [{"color": None, "rank": None} for _ in range(self.hand_size)]
 
         self.action_space = self.build_action_space()
 
@@ -139,9 +140,33 @@ class DQNAgent(Agent):
                 while action_space[action_index] not in observation["legal_moves"]:
                     i += 1
                     action_index = ordered_moves[i].view(1, 1)
+                self.last_hint = observation["card_knowledge"][0]
                 return action_space[action_index], action_index.item()
         else:
-            action_index = random.randrange(len(action_space))
-            while action_space[action_index] not in observation["legal_moves"]:
+            # Check if we have been hinted
+            has_been_hinted = False
+            hinted_cards = []
+            eps2 = .5
+            new_hints = observation["card_knowledge"][0]
+            # Check for hints given last turn
+            for i, card in enumerate(new_hints):
+                if i < len(self.last_hint):
+                    last_card = self.last_hint[i]
+                    if last_card["rank"] is None and card["rank"] is not None:
+                        has_been_hinted = True
+                        hinted_cards.append(i)
+                    elif last_card["color"] is None and card["color"] is not None:
+                        has_been_hinted = True
+                        hinted_cards.append(i)
+            if has_been_hinted and random.random() <= eps2:
+                # Play hinted card
+                self.last_hint = observation["card_knowledge"][0]
+                card_index = random.randrange(len(hinted_cards))
+                action_index = hinted_cards[card_index]
+                return action_space[action_index], action_index
+            else:
                 action_index = random.randrange(len(action_space))
-            return action_space[action_index], action_index
+                while action_space[action_index] not in observation["legal_moves"]:
+                    action_index = random.randrange(len(action_space))
+                self.last_hint = observation["card_knowledge"][0]
+                return action_space[action_index], action_index

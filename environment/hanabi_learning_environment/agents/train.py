@@ -104,6 +104,7 @@ def backprop_reward_if_card_is_played(episode_memory, dict_action, reward, actio
 
     # Iterate over over past actions and look for hint of color/rank on this card
     player = -1 % nplayers
+    factor = 1
     for memory in reversed(episode_memory):
         action_number = memory[1].item()
         dict_action = action_space[action_number]
@@ -112,8 +113,7 @@ def backprop_reward_if_card_is_played(episode_memory, dict_action, reward, actio
             if (player_offset + player) % nplayers == 0:
                 # Player which was targeted was me
                 if color == dict_action.get("color", None) or rank == dict_action.get("rank", None):
-                    memory[3] += reward
-                    return memory[3].item() > 0
+                    memory[3] += reward * factor
         elif dict_action["action_type"] in ("PLAY", "DISCARD") and player == 0:
             offset = dict_action["card_index"]
             # That means we drew the played card at this moment
@@ -127,7 +127,9 @@ def backprop_reward_if_card_is_played(episode_memory, dict_action, reward, actio
         player -= 1
         player %= nplayers
 
-    return False
+        factor *= .95
+
+    return reward > 0
 
 
 def run_training(
@@ -213,6 +215,7 @@ def run_training(
 
         writer.add_scalar("cumulative reward", total_rewards, i_episode)
         writer.add_scalar("episode reward", total_rewards - start_reward, i_episode)
+        writer.add_scalar("episode score", state.score(), i_episode)
 
         for agent in agents:
             # Perform one step of the optimization (on the target network)
