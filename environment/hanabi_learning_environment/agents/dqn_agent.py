@@ -162,7 +162,7 @@ class DQNAgent(Agent):
                 # Play hinted card
                 self.last_hint = observation["card_knowledge"][0]
                 card_index = random.randrange(len(hinted_cards))
-                action_index = hinted_cards[card_index]
+                action_index = hinted_cards[card_index] * 2
                 return action_space[action_index], action_index
             else:
                 action_index = random.randrange(len(action_space))
