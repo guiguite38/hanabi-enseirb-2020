@@ -171,7 +171,7 @@ def run_training(
             action, action_number = agent.select_action(observation, buffer)
 
             new_obs_all, reward, done, _ = env.step(action)
-            reward = torch.tensor([reward], device=device, dtype=torch.float64)
+            reward = torch.FloatTensor([reward], device=device)
             new_obs = new_obs_all["player_observations"][i % 2]
             is_important_memory = backprop_reward_if_card_is_played(episode_memory, action, reward, agent.action_space, len(agents), observation_all["player_observations"][(i + 1) % 2])
 
