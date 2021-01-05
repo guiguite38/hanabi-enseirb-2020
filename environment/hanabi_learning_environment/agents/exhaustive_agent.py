@@ -1,5 +1,5 @@
 """Extensive search of all possible moves, """
-
+#for move_tuple in observation.last_moves(): => donc on a accès aux derniers moves, utile pour construire un state
 """ memo:                       {'current_player': 0,
                                   'current_player_offset': 0,
                                   'deck_size': 40,
@@ -61,11 +61,28 @@
                                   'num_players': 2,
                                   'vectorized': [ 0, 0, 1, ... ]}
 """
+#bool GetDealSpecificMove(int card_index, int player, int color, int rank, pyhanabi_move_t* move)
 
+# TODO: use " HanabiState : get_deal_specific_move(card_index, player, color, rank) " in conjunction with " HanabiState : apply_move(self, move)" from " pyhanabi.py "
+# and maybe " HanabiState : copy(self) " (to save before a move, but it's pretty heavy to do it before every move)
+
+#TODO: Court-circuiter l'appel à new_initial_state, ou modifier ce dernier pour qu'il prenne également une observation et construise le bon state.
+import sys
+import os
+import numpy as np
+import math  
+#DOSSIER_COURANT = os.path.dirname(os.path.abspath(__file__))
+#DOSSIER_PARENT = os.path.dirname(DOSSIER_COURANT)
+#print(DOSSIER_PARENT)
+#sys.path.append(DOSSIER_PARENT)
+
+
+#from hanabi_learning_environment import pyhanabi
 from hanabi_learning_environment.rl_env import Agent
-from hanabi_learning_environment.pyhanabi import color_char_to_idx
-from hanabi_learning_environment.pyhanabi import color_idx_to_char
-from hanabi_learning_environment import pyhanabi
+from hanabi_learning_environment.pyhanabi import color_char_to_idx, color_idx_to_char
+from hanabi_learning_environment.pyhanabi import HanabiGame, HanabiState, HanabiMoveType, HanabiMove
+ 
+import partial_belief as pb # Remember to use update function
 
 
 def recDichoSearchCard(card, cards, i, j):
@@ -119,15 +136,74 @@ class ExtensiveAgent(Agent):
           - max_information_tokens: int, Number of information tokens (>=0)
           - max_life_tokens: int, Number of life tokens (>=0)
           - seed: int, Random seed.
-          - random_start_player: bool, Random start player."""
+          - random_start_player: bool, Random start player.
+          - max_iteration: int, Maximum Depth of the search. """
+
         self.config = config
         print(config)
         # Extract max info tokens or set default to 8.
         self.max_information_tokens = config.get("information_tokens", 8)
+        self.max_iteration = config.get("max_iteration", 3)
+        self.global_game = HanabiGame(config)
+        self.global_game_state = HanabiState(self.global_game)
+        self.current_action_registered = 0 # Don't restart from scratch each time
+
+    def prepare_global_game_state(self, observation): # TODO: a changer pour d'abord construire la discard pile et le board state (en utilisant celui deja present)
+        #puis en settant les bonnes main une fois que tout est fait
+        """ Switch the hands of the other players in the global_game_state variable according to the observations,
+        and change the board state and the discard pile. """
+
+        # QUESTION: Is it really useful to gather all the cards needed instead of just replacing hand for each card ? Only nb_players moves 
+        """move_length = len(observation.last_moves()[self.current_action_registered:])
+        wanted_hands = np.full((self.config["players"], math.ceil(move_length / float(self.config["players"]))), {})
+        for i, move_tuple in enumerate(observation.last_moves()[self.current_action_registered:]): # All the cards that will be needed by each player
+            current_move = move_tuple.move() 
+            
+            if current_move.type() == HanabiMoveType.PLAY:
+                wanted_hands[ i % self.config["players"]][math.floor(i / self.config["players"])]
+
+
+        current_pointer = [0] * self.config["players"] # The current card in use, when it's above self.config["hand_size"] * count, set the new hand
+        current_count = [1] * self.config["players"]
+        for i, move_tuple in enumerate(observation.last_moves()[self.current_action_registered:]):"""
+
+        available_cards = self.unseen_cards(observation) # To use with dichoSearchCard(card, res)
+        
+        playing_player_id = observation["current_player"] #TODO: IT'S WRONG AT THE FIRST TURN !!! PUT HERE A FORMULA TO TAKE INTO ACCOUNT IT
+        for i, move_tuple in enumerate(observation.last_moves()[self.current_action_registered:]):
+            current_move = move_tuple.move()
+
+            #self, player_id, card_index, card
+            if current_move.type() == HanabiMoveType.PLAY: # TODO: Verify if the card is already here, if yes, useless to change it (be careful with the current_player case)
+                self.global_game_state.set_individual_card(playing_player_id , current_move.card_index(), {"color" : color_idx_to_char(move_tuple.color()), "rank" :  move_tuple.rank()})
+                apply_move(HanabiMove.get_play_move(current_move.card_index()))
+                playing_player_id = ( playing_player_id + 1 ) %  self.config["players"]
+                
+            elif current_move.type() == HanabiMoveType.DISCARD:
+                self.global_game_state.set_individual_card(playing_player_id , current_move.card_index(), {"color" : color_idx_to_char(move_tuple.color()), "rank" :  move_tuple.rank()})
+                apply_move(HanabiMove.get_discard_move(current_move.card_index()))
+                playing_player_id = ( playing_player_id + 1 ) %  self.config["players"]
+                
+            elif current_move.type() == HanabiMoveType.DEAL: 
+                deal_specific_card(move_tuple.deal_to_player(), current_move.color(), current_move.rank(), card_index)
+
+            elif current_move.type() == HanabiMoveType.REVEAL_COLOR: 
+                pass
+
+            elif current_move.type() == HanabiMoveType.REVEAL_RANK:
+                pass
+        
+        
+        for i in range(self.config["players"] - 1): # All the players, except the current one
+            tempo_id = (observation["current_player_offset"] + i + 1 ) % self.config["players"] # The place of the ith player's hand
+            self.global_game_state.set_hand(observation["current_player"] + i + 1, observation["observed_hands"][tempo_id])
+
+        return
 
     @staticmethod
     def playable_card(card, fireworks):
         """A card is playable if it can be placed on the fireworks pile."""
+        #TODO: Replace by state.card_playable_on_fireworks(self, color, rank)
         return card["rank"] == fireworks[card["color"]]
 
     @staticmethod
@@ -144,7 +220,7 @@ class ExtensiveAgent(Agent):
     Returns a list of all unseen cards (deck + hidden player hand)
     """
         res = [
-            {"color": x, "rank": y}
+            {"color": x, "rank": y} #TODO: put number of cards here
             for x in range(self.config["colors"])
             for y in range(self.config["ranks"])
         ]
@@ -239,35 +315,42 @@ class ExtensiveAgent(Agent):
         # (((There's a class named "HanabiCardKnowledge" and a function that create those, named "card_knowledge" in HanabiObservation class)))
         # We need
 
-    def get_card_scores(self, cards, observation, iteration):
+    def get_card_scores(self, cards, observation, iteration = 0):
         """
         returns a card list, and the score each would get if it was played
         """
-        # First version, for testing purposes : the state is not modified, score is calculated by hand solely
-        scores = []
-        num_to_letters = ["B", "G", "R", "W", "Y"]
+        if iteration >= self.max_iteration:
+            # Question: Juste pour le premier ? Vraiment ? Ou appliquer ca pour tous ?
+            # TODO: créer tous les states possibles liés à notre observation du terrain (donc toutes nos mains possibles)
+            #for possible_move in observation["
 
-        for card in cards:
-            tempo_card = {"color": num_to_letters[card["color"]], "rank": card["rank"]}
-            if self.playable_card(tempo_card, observation["fireworks"]):
-                scores.append(
-                    self.score_game(observation["fireworks"]) + 1
-                )  # adding a card adds a single point to score wherever it is
-            else:
-                scores.append(
-                    -1
-                )  # playing the wrong card causes the use of a red marker and is therefore punished
-        return scores
+
+
+            #######################################################################################################
+            # First version, for testing purposes : the state is not modified, score is calculated by hand solely
+            scores = []
+            num_to_letters = ["B", "G", "R", "W", "Y"]
+
+            for card in cards:
+                tempo_card = {"color": num_to_letters[card["color"]], "rank": card["rank"]}
+                if self.playable_card(tempo_card, observation["fireworks"]):
+                    scores.append(
+                        self.score_game(observation["fireworks"]) + 1
+                    )  # adding a card adds a single point to score wherever it is
+                else:
+                    scores.append(
+                        -1
+                    )  # playing the wrong card causes the use of a red marker and is therefore punished
+            return scores
 
     def chose_action(self, expected_value):
-        playable_threshold = 0.75
-        discardable_threshold = 0
+        playable_threshold = 0.75 # A small margin
+        discardable_threshold = 0 # Must be sure at 100% to discard it
         best_card = expected_value.index(max(expected_value))
-        # we only play if this will give us points with a high probability
-        if(expected_value[best_card] <= playable_threshold):
-            return {'action_type': 'PLAY', 'card_index': }
-
         worst_card = expected_value.index(min(expected_value))
+        # we only play if this will give us points with a high probability
+        if(expected_value[best_card] >= playable_threshold):
+            return {'action_type': 'PLAY', 'card_index': best_card}
         # otherwise we can discard a card if any card is likely to bring a bad score
         # !! this will need to be the last option once we know how to deal with hints
         elif(worst_card < discardable_threshold) :
