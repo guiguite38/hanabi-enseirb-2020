@@ -441,10 +441,10 @@ class ExtensiveAgent(Agent):
         # The agent only plays on its turn
 
         print(observation)
-        
-        if observation.cur_player_offset() != 0:
+        self.prepare_global_game_state(observation)
+        if observation["current_player_offset"] != 0:
             return None
-
+        return observation["legal_moves"][0]
         expected_value = self.calculate_expected_value(observation, 0, self.global_game_state, observation.cur_player_offset())
         return observation.np.argmax(expected_value)
 
