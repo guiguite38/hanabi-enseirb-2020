@@ -177,7 +177,7 @@ class ExtensiveAgent(Agent):
             self.offset_real_local = observation["current_player"]
             self.local_player_id = self.config["players"] - observation["current_player_offset"]
             for i in range(len(observation["observed_hands"]) - 1):
-                self.global_game_state.set_hand( self.local_player_id + i + 1, observation["observed_hands"][i])
+                self.global_game_state.set_hand( self.local_player_id + i + 1, observation["observed_hands"][i + 1])
                 
         else: # Ce n'est pas le premier tour, on peut comparer avec la précedente observation pour obtenir l'action qui a été jouée
             current_player_local = self.global_game_state.cur_player() # Le joueur de l'observation précédente, de qui on va chercher et appliquer le mouvement
