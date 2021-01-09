@@ -175,9 +175,9 @@ class ExtensiveAgent(Agent):
         if self.previous_observation is None: # C'est le premier tour, donc pas d'observation précédente
             # On doit ici mettre toutes les mains des différents joueurs (sauf nous-même) en accord avec la vraie partie
             self.offset_real_local = observation["current_player"]
-            self.local_player_id = self.config["players"] - observation["current_player_offset"]
+            self.local_player_id = (self.config["players"] - observation["current_player_offset"]) % self.config["players"]
             for i in range(len(observation["observed_hands"]) - 1):
-                self.global_game_state.set_hand( self.local_player_id + i + 1, observation["observed_hands"][i + 1])
+                self.global_game_state.set_hand( (self.local_player_id + i + 1) % self.config["players"], observation["observed_hands"][i + 1])
                 
         else: # Ce n'est pas le premier tour, on peut comparer avec la précedente observation pour obtenir l'action qui a été jouée
             current_player_local = self.global_game_state.cur_player() # Le joueur de l'observation précédente, de qui on va chercher et appliquer le mouvement
@@ -286,14 +286,14 @@ class ExtensiveAgent(Agent):
                                                         break
                                 self.global_game_state.set_hand(self.local_player_id, hand_to_be_set)#On va enfin set la main que l'on vient de créer pour répondre au
                                                                                                      #critère voulu
-                                self.global_game_state.apply_move(HanabiMove.get_reveal_color_move(self.local_player_id - current_player_local, indice_value))
+                                self.global_game_state.apply_move(HanabiMove.get_reveal_color_move((self.local_player_id - current_player_local) % self.config["players"], indice_value))
                                        
 
                             else: # Le cas le plus simple, la main est déjà censée être dans l'état qui convient
                                 if indice_type == "color":
-                                    self.global_game_state.apply_move(HanabiMove.get_reveal_color_move(self.local_player_id + i - current_player_local, indice_value))
+                                    self.global_game_state.apply_move(HanabiMove.get_reveal_color_move((self.local_player_id + i - current_player_local) % self.config["players"], indice_value))
                                 else:
-                                    self.global_game_state.apply_move(HanabiMove.get_reveal_rank_move(self.local_player_id + i - current_player_local, indice_value))
+                                    self.global_game_state.apply_move(HanabiMove.get_reveal_rank_move((self.local_player_id + i - current_player_local) % self.config["players"], indice_value))
                                 
                             
                                 
