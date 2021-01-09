@@ -72,7 +72,7 @@ def run_game(game_parameters):
       print("Encoded observation for player {}: {}".format(
           i, encoder.encode(state.observation(i))))
     print("--- EndEncodedObservations ---")
-  players_list = [ExhaustiveAgent() for i in range(game_parameters["players"])]
+  players_list = [exh.ExtensiveAgent(game_parameters) for i in range(game_parameters["players"])]
   game = pyhanabi.HanabiGame(game_parameters)
   print(game.parameter_string(), end="")
   obs_encoder = pyhanabi.ObservationEncoder(
