@@ -301,6 +301,7 @@ class ExtensiveAgent(Agent):
                                    
         self.previous_observation = observation
 
+    @staticmethod
     def transform_dict_to_move(dic):
         """ Transform a dict-shaped move into an HanabiMove """
         if dic["action_type"] == "PLAY":
