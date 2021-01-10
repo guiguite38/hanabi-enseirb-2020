@@ -301,6 +301,23 @@ class ExtensiveAgent(Agent):
                                    
         self.previous_observation = observation
 
+    def transform_dict_to_move(dic):
+        """ Transform a dict-shaped move into an HanabiMove """
+        if dic["action_type"] == "PLAY":
+            return HanabiMove.get_play_move(dic["card_index"])
+        elif dic["action_type"] == "DISCARD":
+            return HanabiMove.get_discard_move(dic["card_index"])
+        elif dic["action_type"] == "REVEAL_COLOR":
+            return HanabiMove.get_reveal_color_move(dic["target_offset"], dic["color"])
+        elif dic["action_type"] == "REVEAL_RANK":
+            return HanabiMove.get_reveal_color_move(dic["target_offset"], dic["rank"])
+        else:
+            print("Ce move n'existe pas, il n'est donc pas possible de le transformer en HanabiMove.")
+            return None
+
+
+
+
     @staticmethod
     def unseen_cards(observation):
         currently_unseen_cards = np.array([
