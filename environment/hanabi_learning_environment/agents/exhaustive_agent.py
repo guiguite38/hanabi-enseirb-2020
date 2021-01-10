@@ -183,8 +183,9 @@ class ExtensiveAgent(Agent):
             current_player_local = self.global_game_state.cur_player() # Le joueur de l'observation précédente, de qui on va chercher et appliquer le mouvement
             
             if self.previous_observation["current_player_offset"] == 0: # Si le dernier tour, c'était à moi de jouer (j'ai donc pu stocker mon move)
-                self.global_game_state.apply_move(self.last_personal_move)
-                self.global_game_state.deal_random_card() # On ne sait de toute manière pas quelle carte j'ai pioché, aucun intérêt d'en choisir une
+                """self.global_game_state.apply_move(self.last_personal_move)
+                self.global_game_state.deal_random_card() # On ne sait de toute manière pas quelle carte j'ai pioché, aucun intérêt d'en choisir une"""
+                pass
                     
             else: # Sinon, il faut chercher ce qui a changé sur le terrain
                 if len(self.previous_observation["discard_pile"]) < len(observation["discard_pile"]): # Une carte y a donc été rajoutée (volontairement ou non)
