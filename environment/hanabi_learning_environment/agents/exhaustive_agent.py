@@ -208,7 +208,7 @@ class ExtensiveAgent(Agent):
                                                                     self.config["hand_size"] -1) # Je sais déjà par quoi a été remplacé la carte jouée
                     return 0 # OK
                 
-                for key in observation["fireworks"]:
+                """for key in observation["fireworks"]:
                     if self.previous_observation["fireworks"][key] < observation["fireworks"][key]:
                         index = ExtensiveAgent.search_card_index({"color": key, "rank": observation["fireworks"][key]},
                                                   self.previous_observation["observed_hands"][self.previous_observation["current_player_offset"]])
@@ -219,7 +219,7 @@ class ExtensiveAgent(Agent):
                                                                     self.config["hand_size"] -1) # Je sais déjà par quoi a été remplacé la carte jouée
                         return 0 # OK
                         
-                """for i in range(len(observation["card_knowledge"])): # On va maintenant chercher les potentiels indices délivrés, vu qu'aucune carte n'a été jouée
+                for i in range(len(observation["card_knowledge"])): # On va maintenant chercher les potentiels indices délivrés, vu qu'aucune carte n'a été jouée
                                                                     #(même sur nous, ce qui est plus complexe)
                     for j in range(len(observation["card_knowledge"][i])):
                         if (self.previous_observation["card_knowledge"][i][j]["color"] != observation["card_knowledge"][i][j]["color"]
