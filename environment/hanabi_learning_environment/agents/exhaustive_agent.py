@@ -462,7 +462,7 @@ class ExtensiveAgent(Agent):
         self.prepare_global_game_state(observation)
         if observation["current_player_offset"] != 0:
             return None
-        self.last_personal_move = transform_dict_to_move(observation["legal_moves"][0])
+        self.last_personal_move = ExtensiveAgent.transform_dict_to_move(observation["legal_moves"][0])
         return observation["legal_moves"][0]
         expected_value = self.calculate_expected_value(observation, 0, self.global_game_state, observation.cur_player_offset())
         return observation.np.argmax(expected_value)
