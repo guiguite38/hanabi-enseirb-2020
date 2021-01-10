@@ -193,7 +193,7 @@ class ExtensiveAgent(Agent):
                     if index == -1:
                         print("!!! index == -1 !!! It's not supposed to be possible ...")
                         return -1 # Problème de state
-                    if self.previous_observation["life_token"] > observation["life_token"]: # Une erreur a été commise
+                    if self.previous_observation["life_tokens"] > observation["life_tokens"]: # Une erreur a été commise
                         
                         self.global_game_state.apply_move(HanabiMove.get_play_move(index))
                         self.global_game_state.deal_specific_card(current_player_local,
