@@ -186,7 +186,7 @@ class ExtensiveAgent(Agent):
                 self.global_game_state.apply_move(self.last_personal_move)
                 self.global_game_state.deal_random_card() # On ne sait de toute manière pas quelle carte j'ai pioché, aucun intérêt d'en choisir une
                     
-            else: # Sinon, il faut chercher ce qui a changé sur le terrain
+            """else: # Sinon, il faut chercher ce qui a changé sur le terrain
                 if len(self.previous_observation["discard_pile"]) < len(observation["discard_pile"]): # Une carte y a donc été rajoutée (volontairement ou non)
                     index = ExtensiveAgent.search_card_index(observation["discard_pile"][-1],
                                               self.previous_observation["observed_hands"][self.previous_observation["current_player_offset"]])
@@ -208,7 +208,7 @@ class ExtensiveAgent(Agent):
                                                                     self.config["hand_size"] -1) # Je sais déjà par quoi a été remplacé la carte jouée
                     return 0 # OK
                 
-                """for key in observation["fireworks"]:
+                for key in observation["fireworks"]:
                     if self.previous_observation["fireworks"][key] < observation["fireworks"][key]:
                         index = ExtensiveAgent.search_card_index({"color": key, "rank": observation["fireworks"][key]},
                                                   self.previous_observation["observed_hands"][self.previous_observation["current_player_offset"]])
