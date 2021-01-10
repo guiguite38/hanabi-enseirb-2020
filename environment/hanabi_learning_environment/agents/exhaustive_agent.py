@@ -314,6 +314,7 @@ class ExtensiveAgent(Agent):
             return HanabiMove.get_reveal_color_move(dic["target_offset"], dic["rank"])
         else:
             print("Ce move n'existe pas, il n'est donc pas possible de le transformer en HanabiMove.")
+            1/0
             return None
 
 
