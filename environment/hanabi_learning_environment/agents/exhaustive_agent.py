@@ -188,7 +188,7 @@ class ExtensiveAgent(Agent):
                     
             else: # Sinon, il faut chercher ce qui a changé sur le terrain
                 if len(self.previous_observation["discard_pile"]) < len(observation["discard_pile"]): # Une carte y a donc été rajoutée (volontairement ou non)
-                    index = search_card_index(observation["discard_pile"][-1],
+                    index = ExtensiveAgent.search_card_index(observation["discard_pile"][-1],
                                               self.previous_observation["observed_hands"][self.previous_observation["current_player_offset"]])
                     if index == -1:
                         print("!!! index == -1 !!! It's not supposed to be possible ...")
@@ -210,7 +210,7 @@ class ExtensiveAgent(Agent):
                 
                 for key in observation["fireworks"]:
                     if self.previous_observation["fireworks"][key] < observation["fireworks"][key]:
-                        index = search_card_index({"color": key, "rank": observation["fireworks"][key]},
+                        index = ExtensiveAgent.search_card_index({"color": key, "rank": observation["fireworks"][key]},
                                                   self.previous_observation["observed_hands"][self.previous_observation["current_player_offset"]])
                         self.global_game_state.apply_move(HanabiMove.get_play_move(index))
                         self.global_game_state.deal_specific_card(current_player_local,
@@ -235,7 +235,7 @@ class ExtensiveAgent(Agent):
                                 
                             if i == 0: # Le cas spécial où on va devoir distribuer une main adaptée aux révélations (ni trop, ni trop peu), car on ne connait pas sa main
                                        #exacte, la main dans le self.global_game_state n'a donc aucune valeur
-                                available_cards = unseen_cards(self.previous_observation)
+                                available_cards = ExtensiveAgent.unseen_cards(self.previous_observation)
                                 hand_to_be_set = []
                                 for k in range(len(observation["card_knowledge"][0])): # On pourrait très légèrement optimiser en traitant à part le cas k < j
                                                                                        #(on gagnerait une comparaison et quelques accès)
