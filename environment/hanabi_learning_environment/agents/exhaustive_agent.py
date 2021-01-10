@@ -73,6 +73,8 @@ import sys
 import os
 import numpy as np
 import math  
+import time
+import random
 #DOSSIER_COURANT = os.path.dirname(os.path.abspath(__file__))
 #DOSSIER_PARENT = os.path.dirname(DOSSIER_COURANT)
 #print(DOSSIER_PARENT)
@@ -173,7 +175,8 @@ class ExtensiveAgent(Agent):
         return -1
 
     def printing_state_result(self, observation):
-        print("LOCAL STATE OBSERVATION FOR ",self.local_player_id,":", self.global_game_state.observation(self.local_player_id).observed_hands())       
+        print("LOCAL STATE OBSERVATION FOR ",self.local_player_id,":", self.global_game_state.observation(self.local_player_id).observed_hands())  
+        print("PLAYER TO PLAY AT THE END OF THE OPERATION:", self.global_game_state.cur_player())     
         print("LOCAL DISCARD PILE:", self.global_game_state.discard_pile())
         print("LOCAL LIFE TOKENS:",self.global_game_state.life_tokens())
         print("LOCAL FIREWORKS:",self.global_game_state.fireworks())
@@ -195,6 +198,9 @@ class ExtensiveAgent(Agent):
             print()
             print()
             print("CREATION INITIALE, NUMERO DU PREMIER JOUEUR:",current_player_local)
+            print("JE M'ENDORS POUR LAISSER LE TEMPS DE VOIR D'OU VIENT L'ERREUR")
+            print()
+            time.sleep(5)
             try:
                 for i in range(len(observation["observed_hands"]) - 1): #TODO: Verifier les cartes présentes dans les différentes mains avant de faire chaque set_hand 
                                                                     #(et compenser après la boucle avec une condition 
@@ -203,7 +209,11 @@ class ExtensiveAgent(Agent):
             except:
                 print("Cas pas encore traité, le sera dans le futur")
                 return -1
+            print("JE ME RENDORS POUR SIGNIFIER QUE CETTE PARTIE EST PASS2E CORRECTEMENT")
+            print()
+            time.sleep(3)
             # Dû à une feature non prévue, il faut set_hand un nombre de fois égal au nombre de joueurs, on va donc redonner la main du dernier joueur
+            # COMMENT CETTE LIGNE PEUT BUGUER ??? TODO: A CHECKER
             self.global_game_state.set_hand( (self.local_player_id + len(observation["observed_hands"]) - 1) % self.config["players"], observation["observed_hands"][len(observation["observed_hands"]) - 1])
             current_player_local = self.global_game_state.cur_player() # Le joueur de l'observation précédente, de qui on va chercher et appliquer le mouvement
             print("CREATION INITIALE, NUMERO DU PREMIER JOUEUR (vérification):",current_player_local)
@@ -354,7 +364,7 @@ class ExtensiveAgent(Agent):
                                                     for m in range(len(available_cards[l])):
                                                         if available_cards[l][m] > 0:
                                                             available_cards[l][m] -= 1
-                                                            hand_to_be_set.append({"color": l, "rank": m})
+                                                            hand_to_be_set.append({"color": color_idx_to_char(l), "rank": m})
                                                             found = True
                                                             break
                                                     if found:
@@ -392,12 +402,14 @@ class ExtensiveAgent(Agent):
                                 else:
                                     print("HAND IS READY TO BE SET:", hand_to_be_set)
                                 for l in range(self.config["players"]):
-                                    print("Currently, the player to play locally is:", self.global_game_state.cur_player())
+                                    print("Currently (before the loop iteration), the player to play locally is:", self.global_game_state.cur_player())
                                     self.global_game_state.set_hand(self.local_player_id, hand_to_be_set)#On va enfin set la main que l'on vient de créer pour répondre au
                                                                                                          #critère voulu
                                 if indice_type == "color":
-                                    if self.global_game_state.move_is_legal(HanabiMove.get_reveal_color_move((self.local_player_id + i - current_player_local) % self.config["players"], indice_value)):
-                                        self.global_game_state.apply_move(HanabiMove.get_reveal_color_move((self.local_player_id + i - current_player_local) % self.config["players"], indice_value))
+                                    if self.global_game_state.move_is_legal(HanabiMove.get_reveal_color_move((self.local_player_id + i - current_player_local) % self.config["players"], color_char_to_idx(indice_value))):
+                                        self.global_game_state.apply_move(HanabiMove.get_reveal_color_move((self.local_player_id + i - current_player_local) % self.config["players"], color_char_to_idx(indice_value)))
+                                        self.printing_state_result(observation)
+                                        return 0
                                     else:
                                         print("REVEAL COLOR PERSO MOVE ISN'T LEGAL")
                                         print("LOCAL LEGAL MOVES", self.global_game_state.legal_moves())
@@ -408,6 +420,8 @@ class ExtensiveAgent(Agent):
                                 else:
                                     if self.global_game_state.move_is_legal(HanabiMove.get_reveal_rank_move((self.local_player_id + i - current_player_local) % self.config["players"], indice_value)):
                                         self.global_game_state.apply_move(HanabiMove.get_reveal_rank_move((self.local_player_id + i - current_player_local) % self.config["players"], indice_value))
+                                        self.printing_state_result(observation)
+                                        return 0
                                     else:
                                         print("REVEAL RANK PERSO MOVE ISN'T LEGAL")
                                         print("LOCAL LEGAL MOVES", self.global_game_state.legal_moves())
@@ -417,7 +431,7 @@ class ExtensiveAgent(Agent):
                                         return -1
                                        
 
-                            else: # Le cas le plus simple, la main est déjà censée être dans l'état qui convient
+                            else: # Le cas le plus simple, la main est déjà censée être dans l'état qui convient (!!! PAS TESTE A 2 JOUEURS !!!)
                                 if indice_type == "color":
                                     if self.global_game_state.move_is_legal(HanabiMove.get_reveal_color_move((self.local_player_id + i - current_player_local) % self.config["players"], indice_value)):
                                         self.global_game_state.apply_move(HanabiMove.get_reveal_color_move((self.local_player_id + i - current_player_local) % self.config["players"], indice_value))
@@ -612,8 +626,9 @@ class ExtensiveAgent(Agent):
           return -1
         if observation["current_player_offset"] != 0:
             return None
-        self.last_personal_move = observation["legal_moves"][-1]
-        return observation["legal_moves"][-1]
+        curr_rand = random.randint(0, len(observation["legal_moves"]) -1)
+        self.last_personal_move = observation["legal_moves"][curr_rand]
+        return observation["legal_moves"][curr_rand]
         expected_value = self.calculate_expected_value(observation, 0, self.global_game_state, observation.cur_player_offset())
         return observation.np.argmax(expected_value)
 
