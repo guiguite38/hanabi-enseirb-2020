@@ -105,6 +105,7 @@ def backprop_reward_if_card_is_played(episode_memory, dict_action, reward, actio
     # Iterate over over past actions and look for hint of color/rank on this card
     player = -1 % nplayers
     factor = 1
+    should_be_saved = False
     for memory in reversed(episode_memory):
         action_number = memory[1].item()
         dict_action = action_space[action_number]
@@ -114,6 +115,9 @@ def backprop_reward_if_card_is_played(episode_memory, dict_action, reward, actio
                 # Player which was targeted was me
                 if color == dict_action.get("color", None) or rank == dict_action.get("rank", None):
                     memory[3] += reward * factor
+                    if memory[3] > 0:
+                        memory[4] = True
+                        should_be_saved = True
         elif dict_action["action_type"] in ("PLAY", "DISCARD") and player == 0:
             offset = dict_action["card_index"]
             # That means we drew the played card at this moment
@@ -128,8 +132,7 @@ def backprop_reward_if_card_is_played(episode_memory, dict_action, reward, actio
         player %= nplayers
 
         factor *= .95
-
-    return reward > 0
+    return should_be_saved
 
 
 def run_training(
@@ -171,9 +174,10 @@ def run_training(
             action, action_number = agent.select_action(observation, buffer)
 
             new_obs_all, reward, done, _ = env.step(action)
-            reward = torch.FloatTensor([reward], device=device)
             new_obs = new_obs_all["player_observations"][i % 2]
-            is_important_memory = backprop_reward_if_card_is_played(episode_memory, action, reward, agent.action_space, len(agents), observation_all["player_observations"][(i + 1) % 2])
+
+            reward = torch.FloatTensor([reward], device=device)
+            is_important = backprop_reward_if_card_is_played(episode_memory, action, reward, agent.action_space, len(agents), observation_all["player_observations"][(i + 1) % 2])
 
             # Prepare next buffer
             next_buffer = buffer.clone()
@@ -190,7 +194,7 @@ def run_training(
                     torch.LongTensor([action_number]),
                     None,
                     reward,
-                    is_important_memory])
+                    is_important])
                 total_rewards += reward.item()
                 break
             else:
@@ -199,7 +203,7 @@ def run_training(
                     torch.LongTensor([action_number]),
                     next_buffer,
                     reward,
-                    is_important_memory])
+                    is_important])
 
             # Move to the next state
             observation_all = new_obs_all
@@ -216,6 +220,7 @@ def run_training(
         writer.add_scalar("cumulative reward", total_rewards, i_episode)
         writer.add_scalar("episode reward", total_rewards - start_reward, i_episode)
         writer.add_scalar("episode score", state.score(), i_episode)
+        writer.add_scalar("firework score", score_game(new_obs["fireworks"]), i_episode)
 
         for agent in agents:
             # Perform one step of the optimization (on the target network)
@@ -246,5 +251,5 @@ if __name__ == "__main__":
     run_training(
         {"players": flags["players"], "colors": 5, "ranks": 5, "hand_size": 5},
         {"players": 2, "random_start_player": True},
-        num_episodes=1000,
+        num_episodes=5000,
     )
