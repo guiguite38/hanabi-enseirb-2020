@@ -54,8 +54,8 @@ class DQNAgent(Agent):
         self.BATCH_SIZE = 128
         self.GAMMA = 0.999
         self.EPS_START = 0.9
-        self.EPS_END = 0.05
-        self.EPS_DECAY = 200
+        self.EPS_END = 0.01
+        self.EPS_DECAY = 500
         self.TARGET_UPDATE = 10
         # initialise DQN
         self.n_actions = 20  # hard coded maybe do better one day
@@ -75,7 +75,7 @@ class DQNAgent(Agent):
         self.target_net.eval()
         self.policy_net.eval()
 
-        self.optimizer = optim.RMSprop(self.policy_net.parameters())
+        self.optimizer = optim.Adam(self.policy_net.parameters(), weight_decay=1e-4)
         self.memory = ReplayMemory(10000)
 
         self.steps_done = 0
@@ -109,7 +109,7 @@ class DQNAgent(Agent):
             for rank in range(5):
                 action_space.append(
                     {
-                        "action_type": "RevealRank",
+                        "action_type": "REVEAL_RANK",
                         "rank": rank,
                         "target_offset": player_offset,
                     }
@@ -140,7 +140,7 @@ class DQNAgent(Agent):
                 while action_space[action_index] not in observation["legal_moves"]:
                     i += 1
                     action_index = ordered_moves[i].view(1, 1)
-                self.last_hint = observation["card_knowledge"][0]
+                self.last_hint = observation["card_knowledge"][0][:]
                 return action_space[action_index], action_index.item()
         else:
             # Check if we have been hinted
@@ -160,7 +160,7 @@ class DQNAgent(Agent):
                         hinted_cards.append(i)
             if has_been_hinted and random.random() <= eps2:
                 # Play hinted card
-                self.last_hint = observation["card_knowledge"][0]
+                self.last_hint = observation["card_knowledge"][0][:]
                 card_index = random.randrange(len(hinted_cards))
                 action_index = hinted_cards[card_index] * 2
                 return action_space[action_index], action_index
@@ -168,5 +168,5 @@ class DQNAgent(Agent):
                 action_index = random.randrange(len(action_space))
                 while action_space[action_index] not in observation["legal_moves"]:
                     action_index = random.randrange(len(action_space))
-                self.last_hint = observation["card_knowledge"][0]
+                self.last_hint = observation["card_knowledge"][0][:]
                 return action_space[action_index], action_index
