@@ -624,7 +624,7 @@ class HanabiState(object):
     card arg is a dict with keys 'color' with string value and 'rank'
     with int value."""
     
-    self.return_card(player_id, 0)
+    self.return_card(player_id, card_index)
     
     color = color_char_to_idx(card["color"])
     rank = card["rank"]
