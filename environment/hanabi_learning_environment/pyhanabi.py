@@ -615,6 +615,21 @@ class HanabiState(object):
         rank = card["rank"]
         self.deal_specific_card(player_id, color, rank, card_index)
 
+  def set_individual_card(self, player_id, card_index, card):
+    """Set the targeted card of the specified player to the specified card given in the
+    same manner as in the observations vector.
+
+    card_index is the target place.
+    
+    card arg is a dict with keys 'color' with string value and 'rank'
+    with int value."""
+    
+    self.return_card(player_id, card_index)
+    
+    color = color_char_to_idx(card["color"])
+    rank = card["rank"]
+    self.deal_specific_card(player_id, color, rank, card_index)
+
   def player_hands(self):
     """Returns a list of all hands, with cards ordered oldest to newest."""
     hand_list = []
