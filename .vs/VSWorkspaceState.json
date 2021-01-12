@@ -1,0 +1,10 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\environment",
+    "\\environment\\hanabi_learning_environment",
+    "\\environment\\hanabi_learning_environment\\agents"
+  ],
+  "SelectedNode": "\\environment\\hanabi_learning_environment\\agents\\random_agent.py",
+  "PreviewInSolutionExplorer": false
+}
