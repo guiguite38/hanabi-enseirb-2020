@@ -377,6 +377,8 @@ class HanabiEnv(Environment):
         for player_id in range(self.players)]  # pylint: disable=bad-continuation
     obs["player_observations"] = player_observations
     obs["current_player"] = self.state.cur_player()
+    print("REFERENCE:",self.state.observation(0).observed_hands())
+    print("REFERENCE:",self.state.observation(1).observed_hands())
     return obs
 
   def _extract_dict_from_backend(self, player_id, observation):
